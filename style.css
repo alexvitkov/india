@@ -1,0 +1,181 @@
+html, body {
+	margin: 0;
+	height: 100%;
+}
+
+body {
+	background: #f0f0f0;
+	color: black;
+	font-family: sans-serif;
+	overflow: hidden;
+}
+
+#page {
+	display: flex;
+	flex: 1 0 0;
+	align-items: stretch;
+}
+
+#page > * {
+	flex: 1 0 0;
+}
+
+#header {
+	background: white;
+	margin: 0;
+	padding: 1rem;
+	font-size: 2em;
+}
+
+.logo {
+	font-family: monospace;
+	margin: 0;
+}
+
+#hero {
+	flex: 1.5 0 0;
+	position: relative;
+	font-size: 3.5rem;
+}
+
+.vcenter {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+#hero .bg {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: -5;
+}
+
+#hero > * > p {
+	color: #676d75;
+	margin: 0rem;
+	padding: 0.5rem;
+	white-space: nowrap;
+	text-align: center;
+}
+
+#hero .big {
+	font-size: 1.2em;
+}
+
+.blue {
+	color: #231179;
+	font-weight: bold;
+}
+
+
+form {
+	background: white;
+	margin: 4.5rem;
+	padding-top: 0;
+	box-shadow: 0 0.8rem 1.3rem rgba(0,0,0,0.2);
+	border-radius: 0.5rem;
+	border-radius: 0.5rem;
+	border: 1px solid #b9b9b9;
+}
+
+.vert {
+	justify-content: center;
+	display: flex;
+	flex-direction: column;
+}
+
+.vert2 {
+	display: flex;
+	flex-direction: column;
+}
+
+.overlay {
+	display: grid;
+}
+
+.overlay > * {
+	grid-row: 1;
+	grid-column: 1;
+}
+
+form > .content {
+	margin: 2rem;
+	margin-top: 1rem;
+	margin-bottom: 1.7rem;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+form > h2 {
+	color: #4d4d4d;
+	margin: 0;
+	text-align: center;
+	padding: 1rem;
+	background: #f0f0f0;
+	border-top-left-radius: 0.5rem;
+	border-top-right-radius: 0.5rem;
+}
+
+form p {
+	margin: 1rem 0px 0.3rem 0px;
+}
+
+input {
+	min-width: 300px;
+	border: 1px solid #bbb;
+	padding: 0.5rem;
+	font-size: inherit;
+	font-family: inherit;
+	border-radius: 0.3rem;
+	background: #fdfdfd;
+	transition: background 0.15s, border-color 0.35s;
+}
+
+input[type=submit] {
+	cursor: pointer;
+	margin-top: 2rem;
+	width: 100%;
+	display: block;
+	padding: 0.7rem;
+	font-size: 1.1em;
+	box-shadow: 0 0.2rem 0.6rem #eee;
+	background: #231179;
+	color: white;
+}
+
+input:focus,
+input:hover {
+	background: white;
+}
+
+input:focus {
+	border-color: black;
+}
+
+input[type=submit]:hover {
+	background: #5b4d9d;
+}
+
+.bgbottom {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	z-index: -100;
+}
+
+
+#arrows {
+	position: relative;
+}
+
+#arrows > img {
+	position: absolute;
+	bottom: 0;
+	z-index: 200;
+}
