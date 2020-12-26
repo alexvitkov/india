@@ -3,7 +3,7 @@ arrows = [];
 
 const minSpeed = 3;
 const maxSpeed = 8;
-const delay = 3000;
+const delay = 1500;
 const lifetime = 20000;
 
 function make_arrow() {

@@ -52,10 +52,10 @@
   <g
      id="layer1"
      transform="translate(-9.8831177,-26.865543)"
-     style="fill:#231179;fill-opacity:1">
+     style="fill:#ffffff;fill-opacity:1">
     <path
        id="rect12"
-       style="fill:#231179;fill-rule:evenodd;stroke-width:0.860931;fill-opacity:1"
+       style="fill:#ffffff;fill-rule:evenodd;stroke-width:0.860931;fill-opacity:1"
        d="M 101.58398,101.53906 37.353516,254.44747 75.386719,234.3418 v 487.68554 l 26.197261,-20.0516 26.19922,20.05356 V 234.3418 l 38.03321,20.10567 z"
        transform="scale(0.26458333)" />
   </g>

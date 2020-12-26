@@ -177,5 +177,5 @@ input[type=submit]:hover {
 #arrows > img {
 	position: absolute;
 	bottom: 0;
-	z-index: 200;
+	z-index: -200;
 }
