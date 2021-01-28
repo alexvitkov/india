@@ -4,7 +4,7 @@ arrows = [];
 const minSpeed = 3;
 const maxSpeed = 8;
 const delay = 1500;
-const lifetime = 20000;
+const lifetime = 25000;
 
 function make_arrow() {
 	const svg = document.getElementById("protoarrow").cloneNode();

@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="utf-8">
 		<title>shady file upload</title>
-		<link rel="stylesheet" type="text/css" href="style.css">
+		<link rel="stylesheet" type="text/css" href="css/style.css">
 	</head>
 
 	<body>
@@ -16,7 +16,7 @@
 				<div id="page">
 					<div id="hero" class="overlay">
 						<div id="arrows">
-							<img src="arrow.svg" id="protoarrow" style="display: none">
+							<img src="svg/arrow.svg" id="protoarrow" style="display: none">
 						</div>
 
 						<div class="vcenter">
@@ -32,14 +32,14 @@
 							<div class="content">
 								<p>Username</p>
 								<input type="text" id="username" name="username">
-								<p>Email address</p>
+								<p>Email address</p> 
 								<input type="text" id="email" name="email">
 								<p>Password</p>
 								<input type="password" id="password" name="password">
 								<p>Repeat Password</p>
 								<input type="password" id="password2" name="password2">
 								<input type="submit" value="Sign up">
-								<p style="font-size: 1.1em;">Already have an account? <a href="login.php">Sign in</a>
+								<p style="font-size: 1.1em;">Already have an account? <a href="login.html">Sign in</a>
 							</div>
 						</form>
 					</div>
@@ -48,10 +48,10 @@
 				</div>
 			</div>
 
-			<img src="bottom.svg" class="bgbottom">
+			<img src="svg/bottom.svg" class="bgbottom">
 		</div>
 
-		<script src="arrows.js"></script>
+		<script src="js/arrows.js"></script>
 
 	</body>
 	<html>

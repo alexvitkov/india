@@ -1,6 +1,7 @@
 <?php
 require_once "php/database.php";
 require_once "php/misc.php";
+require_once "php/configuration.php";
 
 $username=$_POST["username"];
 $password=$_POST["password"];
