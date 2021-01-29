@@ -161,6 +161,7 @@ input[type=submit] {
 	box-shadow: 0 0.2rem 0.6rem #eee;
 	background: #231179;
 	color: white;
+	outline: none;
 }
 
 input:focus,

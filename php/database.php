@@ -26,7 +26,7 @@ require_once "misc.php";
 			}
 		}
 
-		/*returns false if this isn't a user, otherwise returns the userid*/
+		/*returns false if this isn't a user, otherwise returns the user*/
 		function get_user(string $user) 
 		{
 			$ret=new User;
@@ -53,24 +53,25 @@ require_once "misc.php";
 		function authenticate(string $user, string $password) 
 		{
 			$ret=new User;
-			global $password_hash_algo;
-			
 
-
-			$hashed_pass=password_hash($password,$password_hash_algo);
-			$prep=$this->pdo->prepare("select user_id,username,email from users where username=:username and password=:password");
+			$prep=$this->pdo->prepare("select user_id,username,email,password from users where username=:username");
 			$prep->bindParam(':username',$user);
-			$prep->bindParam(':password',$hashed_pass);
-
 			$prep->execute();
 
 			$hold=$prep->fetch(PDO::FETCH_ASSOC);
+
 			if($hold)
 			{
-				$ret->user_id=hold["user_id"];
-				$ret->username=hold["username"];
-				$ret->email_address["email"];
-				return $ret;
+				if(password_verify($password,$hold["password"]))
+				{
+					$ret->user_id=$hold["user_id"];
+					$ret->username=$hold["username"];
+					$ret->email_address=$hold["email"];
+					return $ret;
+				}else
+				{
+					return false;
+				}
 			}else
 			{
 				return false;

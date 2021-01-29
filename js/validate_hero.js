@@ -8,6 +8,20 @@ function clear_hero_errors()
 		errors[i].hidden = true;
 	}
 }
+function validate_hero_login_form()
+{
+			var username=document.forms["hero_form"]["username"].value;
+			var flag=true;
+			clear_hero_errors();
+
+			if(username.length==0)
+			{
+				document.getElementById("username-length-error").hidden=false;
+				flag=false;
+			}
+			document.activeElement.blur();
+			return flag;
+}
 function validate_hero_form()
 {
 			var username=document.forms["hero_form"]["username"].value;
@@ -28,16 +42,17 @@ function validate_hero_form()
 				document.getElementById("email-error").hidden=false;
 				flag=false;
 			}
-			if(password !== password2)
+			if(password.length==0)
 			{
-				document.getElementById("password-error").hidden=false;
+				document.getElementById("password-length-error").hidden=false;
 				flag=false;
 			}
-
-			if(flag)
+			if(password !== password2)
 			{
-				document.getElementById("success").hidden=false;
+				document.getElementById("password-match-error").hidden=false;
+				flag=false;
 			}
+			document.activeElement.blur();
 			return flag;
 
 }

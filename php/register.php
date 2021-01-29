@@ -1,7 +1,7 @@
 <?php
-require_once "php/database.php";
-require_once "php/misc.php";
-require_once "php/configuration.php";
+require_once "database.php";
+require_once "misc.php";
+require_once "configuration.php";
 
 $username=$_POST["username"];
 $password=$_POST["password"];

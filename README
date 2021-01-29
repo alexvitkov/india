@@ -1,0 +1,6 @@
+FILEUP
+
+
+
+for this to work you need to have mysql. Create a database and a user for this service then 
+modify php/configure.php as needed. Create tables described in sql/fileshare.sql
