@@ -27,17 +27,23 @@
 					</div>
 
 					<div class="vcenter">
-						<form action="/register.php" method="post">
+						<form name="hero_form" action="/register.php" method="post" onsubmit="return validate_hero_form()">
 							<h2>Get started</h2>
 							<div class="content">
 								<p>Username</p>
 								<input type="text" id="username" name="username">
+								<p id="username-length-error" class="hero_form_error" hidden>Please specify a username</p>
+
 								<p>Email address</p> 
 								<input type="text" id="email" name="email">
+								<p id="email-error" class="hero_form_error" hidden>Invalid email address</p>
+
 								<p>Password</p>
 								<input type="password" id="password" name="password">
+
 								<p>Repeat Password</p>
 								<input type="password" id="password2" name="password2">
+								<p id="password-error" class="hero_form_error" hidden>Passwords didn't match</p>
 								<input type="submit" value="Sign up">
 								<p style="font-size: 1.1em;">Already have an account? <a href="login.html">Sign in</a>
 							</div>
@@ -52,6 +58,7 @@
 		</div>
 
 		<script src="js/arrows.js"></script>
+		<script src="js/validate_hero.js"></script>
 
 	</body>
 	<html>
