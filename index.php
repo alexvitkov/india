@@ -1,3 +1,6 @@
+<?php
+    session_start();
+?>
 <!DOCTYPE html>
 <html>
     <head>
@@ -10,23 +13,32 @@
             <div class="vert2">
                 <div id="header">
                     <p class="logo">shady_file_upload</p>
+
+                    <div style="flex: 1 0 0;"></div>
+                    <ul id="topmenu">
+
+                    <?php if (array_key_exists("username", $_SESSION)) { ?>
+                        
+                        <li><?php echo $_SESSION['username'];?></li>
+                        <li>Sign out</li>
+
+                    <?php } else {?>
+
+                        <li onclick="showLogin(false)">Sign up</li>
+                        <li onclick="showLogin(true)">Log in</li>
+
+                    <?php }?>
+                    </ul>
+
                 </div>
 
                 <div id="page">
 
-
 <?php
-    session_start();
     if (array_key_exists("username", $_SESSION)) {
-        echo "Welcome, $_SESSION[username]"; 
-?>
-
-<a href="/php/logout.php">Log out</a>
-
-<?php
-    }
-    else {
-        require_once("loginregister.html");
+        require_once("loggedin.php");
+    } else {
+        require_once("loginregister.php");
     }
 ?>
 
@@ -34,6 +46,5 @@
             </div>
             <img src="svg/bottom.svg" class="bgbottom">
         </div>
-        <script src="main.js"></script>
     </body>
 <html>

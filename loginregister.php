@@ -50,4 +50,4 @@
     </form>
 </div>
 
-
+<script src="loginregister.js"></script>

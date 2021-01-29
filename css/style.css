@@ -23,13 +23,38 @@ body {
 #header {
 	background: white;
 	margin: 0;
-	padding: 1rem;
+	padding: 0;
+    height: 3rem;
 	font-size: 2em;
+    display: flex;
+    align-items: stretch;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+#topmenu {
+    font-size: 1.3rem;
+    list-style-type: none;
+    display: flex;
+    margin: 0;
+    padding: 0;
+}
+
+#topmenu > li {
+    cursor: pointer;
+    padding: 10px;
+}
+
+#topmenu > li:hover {
+    background: #eee;
 }
 
 .logo {
 	font-family: monospace;
 	margin: 0;
+    align-self: center;
+    padding-left: 2rem;
 }
 
 #hero {
@@ -199,3 +224,4 @@ input[type=submit]:hover {
 #loginform {
     display: none;
 }
+
