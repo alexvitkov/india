@@ -1,8 +1,8 @@
 
 function clear_hero_errors()
 {
-	var errors = document.getElementsByClassName("hero_form_error");
-	var i;
+	let errors = document.getElementsByClassName("hero_form_error");
+	let i;
 	for (i = 0; i < errors.length; i++)
 	{
 		errors[i].hidden = true;
@@ -10,8 +10,8 @@ function clear_hero_errors()
 }
 function validate_hero_login_form()
 {
-			var username=document.forms["hero_form"]["username"].value;
-			var flag=true;
+			let username=document.forms["hero_form"]["username"].value;
+			let flag=true;
 			clear_hero_errors();
 
 			if(username.length==0)
@@ -24,12 +24,12 @@ function validate_hero_login_form()
 }
 function validate_hero_form()
 {
-			var username=document.forms["hero_form"]["username"].value;
-			var email=document.forms["hero_form"]["email"].value;
-			var password=document.forms["hero_form"]["password"].value;
-			var password2=document.forms["hero_form"]["password2"].value;
+			let username=document.forms["hero_form"]["username"].value;
+			let email=document.forms["hero_form"]["email"].value;
+			let password=document.forms["hero_form"]["password"].value;
+			let password2=document.forms["hero_form"]["password2"].value;
 
-			var flag=true;
+			let flag=true;
 			clear_hero_errors();
 
 			if(username.length==0)
