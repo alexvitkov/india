@@ -195,3 +195,7 @@ input[type=submit]:hover {
 	bottom: 0;
 	z-index: -200;
 }
+
+#loginform {
+    display: none;
+}
