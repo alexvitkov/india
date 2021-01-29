@@ -31,4 +31,8 @@ if($database->register_user($username,$password,$email))
 	echo "didn't register";
 }
 
+
+$_SESSION['username'] = $username;
+header('Location: /');
+
 ?>

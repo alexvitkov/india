@@ -3,6 +3,8 @@ require_once "user.php";
 require_once "database.php";
 require_once "misc.php";
 
+session_start();
+
 $username=$_POST["username"];
 $password=$_POST["password"];
 /*server side verification*/
@@ -18,8 +20,7 @@ if(!$user)
 	die("Password or username is incorrect");
 }
 
-echo "Username: {$user->username}\n";
-echo "Email: {$user->email_address}";
-
+$_SESSION['username'] = $user->username;
+header('Location: /');
 
 ?>
