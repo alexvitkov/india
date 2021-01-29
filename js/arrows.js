@@ -20,7 +20,7 @@ function make_arrow() {
 	setTimeout(make_arrow, delay);
 	setTimeout(() => {
 		svg.remove();
-		arrows.remove(ob);
+		arrows.shift();
 	}, lifetime);
 }
 

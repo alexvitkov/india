@@ -1,49 +1,31 @@
-drop database fileshare;
-
-
-
-
-
-create database fileshare;
-use fileshare;
-
 /*base user information*/
 create table users (
-  id int not null auto_increment,
+  user_id int not null auto_increment,
   username varchar(50) not null unique,
-  password varchar(100) not null unique,
-  primary key (id)
+  password varchar(255) not null,
+  email varchar(50),
+  primary key (user_id)
 );
 
 /*table has only one owner and is identifyed by a number*/
 create table files (
-  id int not null auto_increment,
-  owner int default null,
-  absolutepath varchar(500) not null,
+  file_id int not null auto_increment,
+  owner_id int default null,
+  relative_path varchar(500) not null,
   type varchar(20) not null default 'data',
-  primary key (id),
-  foreign key (owner) references users(id)
+  primary key (file_id),
+  foreign key (owner_id) references users(user_id)
 );
 
 /*the user with userid is given some kind of access to the file with fileid*/
 /*there is no edit bit because it will be too dificult to implement prehaps a change bit is in order (but not an edit bit)*/
 /*might be beneficial to even go full minimalist and remove the remove bit and only have the view bit*/
 create table access (
-  fileid int not null,
-  userid int not null,
-  canview boolean not null default true,
-  canremove boolean not null default false,
-  check (canview=true or canremove=true) ,
-  foreign key (fileid) references files(id),
-  foreign key (userid) references users(id)
+  file_id int not null,
+  user_id int not null,
+  can_view boolean not null default true,
+  can_remove boolean not null default false,
+  check (can_view=true or can_remove=true) ,
+  foreign key (file_id) references files(file_id),
+  foreign key (user_id) references users(user_id)
 );
-
-
-
-/*basic info for testing purposes*/
-insert into users(username,password) values ("root","asdf");
-insert into users(username,password) values ("tester","tester");
-insert into files(owner,absolutepath,type) values (1,"/root/jiberish.sh","shell script");
-insert into access(fileid,userid,canview,canremove) values(1,2,true,false);
-/*I am not sure why this passes ....*/
-insert into access(fileid,userid,canview,canremove) values(1,2,false,false);

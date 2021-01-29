@@ -125,6 +125,21 @@ form p {
 	margin: 1rem 0px 0.3rem 0px;
 }
 
+
+.hero_form_error {
+	animation: fadein 0.2s;
+	background-color: #ff4d4d;
+	color: #ffffff;
+	padding-left: 0.5rem;
+	border-bottom-left-radius: 0.5rem;
+	border-bottom-right-radius: 0.5rem;
+	margin-top: -0.2rem;
+
+}
+@keyframes fadein {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
 input {
 	min-width: 300px;
 	border: 1px solid #bbb;
@@ -146,6 +161,7 @@ input[type=submit] {
 	box-shadow: 0 0.2rem 0.6rem #eee;
 	background: #231179;
 	color: white;
+	outline: none;
 }
 
 input:focus,
