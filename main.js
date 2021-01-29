@@ -49,7 +49,7 @@ function clear_hero_errors()
 }
 function validate_hero_login_form()
 {
-			var username=document.forms["hero_form"]["username"].value;
+			var username=document.forms["login_form"]["username"].value;
 			var flag=true;
 			clear_hero_errors();
 
@@ -63,10 +63,10 @@ function validate_hero_login_form()
 }
 function validate_hero_form()
 {
-			var username=document.forms["hero_form"]["username"].value;
-			var email=document.forms["hero_form"]["email"].value;
-			var password=document.forms["hero_form"]["password"].value;
-			var password2=document.forms["hero_form"]["password2"].value;
+			var username=document.forms["register_form"]["username"].value;
+			var email=document.forms["register_form"]["email"].value;
+			var password=document.forms["register_form"]["password"].value;
+			var password2=document.forms["register_form"]["password2"].value;
 
 			var flag=true;
 			clear_hero_errors();

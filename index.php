@@ -25,7 +25,7 @@
                     </div>
 
                     <div class="vcenter" id="signupform">
-                        <form name="hero_form" action="/php/register.php" method="post" onsubmit="return validate_hero_form()">
+                        <form name="register_form" action="/php/register.php" method="post" onsubmit="return validate_hero_form()">
                             <h2>Get started</h2>
                             <div class="content">
                                 <p>Username</p>
@@ -50,7 +50,7 @@
                     </div>
 
                     <div class="vcenter" id="loginform">
-                        <form name="hero_form" action="/php/login.php" method="post" onsubmit="return validate_hero_login_form()">
+                        <form name="login_form" action="/php/login.php" method="post" onsubmit="return validate_hero_login_form()">
                             <h2>Login</h2>
                             <div class="content">
                                 <p>Username</p>
