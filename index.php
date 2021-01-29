@@ -20,7 +20,7 @@
                     <?php if (array_key_exists("username", $_SESSION)) { ?>
                         
                         <li><?php echo $_SESSION['username'];?></li>
-                        <li>Sign out</li>
+                        <li onclick="window.location.href='/php/logout.php'">Sign out</li>
 
                     <?php } else {?>
 
