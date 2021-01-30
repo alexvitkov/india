@@ -135,6 +135,7 @@ form > .content {
 	justify-content: center;
 }
 
+.filesystem > h2,
 form > h2 {
 	color: #4d4d4d;
 	margin: 0;
@@ -228,11 +229,17 @@ input[type=submit]:hover {
 .filesystem {
 	background: #fafafa;
 	margin: 1rem;
-	padding: 1rem;
+	padding: 0;
 	box-shadow: 0 0.8rem 1.3rem rgba(0,0,0,0.2);
 	border-radius: 0.5rem;
 	border-radius: 0.5rem;
 	border: 1px solid #b9b9b9;
+
+    display: block;
+}
+
+.files {
+    padding: 1rem;
     display: grid;
 
     grid-gap: 20px;
@@ -264,4 +271,23 @@ input[type=submit]:hover {
 
 .file:hover > img {
     filter: brightness(150%);
+}
+
+.path {
+    font-size: 1.5rem;
+}
+
+.path > a {
+    color: #333;
+    text-decoration: none;
+}
+
+.path > a:hover {
+    text-decoration: underline;
+}
+
+.filesystem > h2 {
+    display: flex;
+    align-items: baseline;
+    font-weight: normal;
 }
