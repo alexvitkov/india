@@ -8,12 +8,16 @@ if (file_exists("/home/alex")) {
     $database_username="alex";
     $database_password="lol";
     $database_location="127.0.0.1";
+
+    $storage_root = "/home/alex/fileup_storage";
 }
 else {
     $database_name="adam";
     $database_username="adam";
     $database_password="asdfd";
     $database_location="127.0.0.1";
+
+    $storage_root = "/home/adam/fileup_storage";
 }
 
 
