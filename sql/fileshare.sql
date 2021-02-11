@@ -23,6 +23,7 @@ create table files (
 create table access (
   file_id int not null,
   user_id int not null,
+   
   can_view boolean not null default true,
   can_remove boolean not null default false,
   check (can_view=true or can_remove=true) ,

@@ -3,10 +3,10 @@
 
 $domain_name="localhost";
 
-$database_name="adam";
-$database_username="adam";
-$database_password="asdfd";
-$database_location="127.0.0.1";
+$database_name="fileup_testing";
+$database_username="outsider";
+$database_password="parola123";
+$database_location="localhost";
 
 
 
