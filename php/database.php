@@ -16,14 +16,8 @@ require_once "misc.php";
 			global $database_username;
 			global $database_password;
 			global $database_location;
-			try
-			{
+
 				$this->pdo=new PDO("mysql:dbname={$database_name};host={$database_location}",$database_username,$database_password);
-			}catch(PDOException $e)
-			{
-				error_log("Could not get database {$database_name} from {$database_location}, {$e} ");
-				die("The cow bought the farm");
-			}
 		}
 
 		/*returns false if this isn't a user, otherwise returns the user*/

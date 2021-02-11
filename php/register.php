@@ -8,6 +8,13 @@ $password=$_POST["password"];
 $password2=$_POST["password2"];
 $email=$_POST["email"];
 
+
+function validate_credentials(string $username,string $email,string $password,string $password2) : bool
+{
+	return true;
+}
+
+
 /*check if we are given shady credentials*/
 if(!validate_credentials($username,$email,$password,$password2))
 {
@@ -23,5 +30,9 @@ if($database->register_user($username,$password,$email))
 {
 	echo "didn't register";
 }
+
+
+$_SESSION['username'] = $username;
+header('Location: /');
 
 ?>

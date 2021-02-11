@@ -23,13 +23,38 @@ body {
 #header {
 	background: white;
 	margin: 0;
-	padding: 1rem;
+	padding: 0;
+    height: 3rem;
 	font-size: 2em;
+    display: flex;
+    align-items: stretch;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+#topmenu {
+    font-size: 1.3rem;
+    list-style-type: none;
+    display: flex;
+    margin: 0;
+    padding: 0;
+}
+
+#topmenu > li {
+    cursor: pointer;
+    padding: 10px;
+}
+
+#topmenu > li:hover {
+    background: #eee;
 }
 
 .logo {
 	font-family: monospace;
 	margin: 0;
+    align-self: center;
+    padding-left: 2rem;
 }
 
 #hero {
@@ -69,7 +94,6 @@ body {
 	color: #231179;
 	font-weight: bold;
 }
-
 
 form {
 	background: white;
@@ -111,6 +135,7 @@ form > .content {
 	justify-content: center;
 }
 
+.filesystem > h2,
 form > h2 {
 	color: #4d4d4d;
 	margin: 0;
@@ -140,7 +165,8 @@ form p {
 	from { opacity: 0; }
 	to   { opacity: 1; }
 }
-input {
+
+input:not([type=file]) {
 	min-width: 300px;
 	border: 1px solid #bbb;
 	padding: 0.5rem;
@@ -194,4 +220,74 @@ input[type=submit]:hover {
 	position: absolute;
 	bottom: 0;
 	z-index: -200;
+}
+
+#loginform {
+    display: none;
+}
+
+.filesystem {
+	background: #fafafa;
+	margin: 1rem;
+	padding: 0;
+	box-shadow: 0 0.8rem 1.3rem rgba(0,0,0,0.2);
+	border-radius: 0.5rem;
+	border-radius: 0.5rem;
+	border: 1px solid #b9b9b9;
+
+    display: block;
+}
+
+.files {
+    padding: 1rem;
+    display: grid;
+
+    grid-gap: 20px;
+    grid-auto-rows: 10rem;
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+}
+
+.file {
+    padding: 0.5rem;
+    cursor: pointer;
+    color: #333;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid #fafafa;
+    border-radius: 0.3rem;
+}
+
+.file:hover {
+    padding: 0.5rem;
+    background: white;
+    color: black;
+    border-color: #ddd;
+}
+
+.file:hover > img {
+    filter: brightness(150%);
+}
+
+.path {
+    font-size: 1.5rem;
+}
+
+.path > a {
+    color: #333;
+    text-decoration: none;
+}
+
+.path > a:hover {
+    text-decoration: underline;
+}
+
+.filesystem > h2 {
+    display: flex;
+    align-items: baseline;
+    font-weight: normal;
 }

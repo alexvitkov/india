@@ -5,7 +5,6 @@ if (!array_key_exists('uf', $_FILES)) {
 	exit();
 }
 
-
 $file = $_FILES['uf'];
 
 
