@@ -43,9 +43,17 @@ require_once "user.php";
 	function create_directory(string $abstract_path,string $directory_name,string $note,User $user)
 	{
 		global $database;
-		$dir_id=$database->create_dangling_directory();
+
 		$parent_dir_id=get_directory($abstract_path,$user);
-		$database->link_nodes($parent_dir_id,$dir_id,$directory_name,$note);
+		if($database->check_if_name_is_taken($directory_name,$parent_dir_id))
+		{
+			return NULL;
+		}else
+		{
+			$dir_id=$database->create_dangling_directory();
+			$database->link_nodes($parent_dir_id,$dir_id,$directory_name,$note);
+			return $dir_id;
+		}
 	}
 
 ?>

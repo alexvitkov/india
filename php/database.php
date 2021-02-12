@@ -112,7 +112,6 @@ require_once "node.php";
 		/* returns assoc array of nodes*/
 		function get_links_of(int $node_id)
 		{
-			error_log("in get_links_of with argument {$node_id}");
 			$statement=$this->pdo->prepare("
 							select node_links.node_id as id,
 								node_links.name as name,
@@ -308,6 +307,17 @@ require_once "node.php";
 				error_log("there was an error with the statement ni link_nodes");
 			}
 		}
+		function check_if_name_is_taken(string $filename,int $dir_id):bool
+		{
+			if($this->get_node_id($filename,$dir_id)!=NULL)
+			{
+				return true;
+			}else
+			{
+				return false;
+			}
+
+		}
 		/*returns the file name as it must be in the filesystem relative to the storage root*/
 		function create_file_node(string $filename,string $note,int $dir_id,string $mimetype,User $user): string
 		{
@@ -348,7 +358,7 @@ require_once "node.php";
 			}
 
 			/*check if node with given name exists*/
-			if($this->get_node_id($filename,$dir_id)!=NULL)
+			if($this->check_if_name_is_taken($filename,$dir_id))
 			{
 				error_log("filename taken");
 				return "filename taken";
