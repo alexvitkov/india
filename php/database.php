@@ -37,6 +37,7 @@ require_once "misc.php";
 				$ret->user_id=$hold["user_id"];
 				$ret->username=$hold["username"];
 				$ret->email_address=$hold["email"];
+				$ret->current_directory=$hold["home_directory"];
 				return $ret;
 			}else
 			{
@@ -71,6 +72,86 @@ require_once "misc.php";
 				return false;
 			}
 		}
+		function get_node_id($name,$directory_id)
+		{
+			$hold=NULL;
+			$statement=NULL;
+			$ret=[];
+			if($name != NULL)
+			{
+				if($directory_id!=NULL)
+				{
+					$statement=$this->pdo->prepare(
+						"select nl.node_id as id from node_links nl
+						inner join nodes n on n.node_id=nl.node_id 
+						where name=:name and directory_id=:directory_id)");
+					$statement->bindParam(':name',$name);
+					$statement->bindParam(':directory_id',$directory_id);
+				}else
+				{
+					/*get all node_ids with the name name*/
+					$statement=$this->pdo->prepare("select node_id as id from nodes where name=:name");
+					$statement->bindParam(':name',$name);
+				}
+				if($statement==NULL)
+				{
+					error_log("statement is null");
+					exit(1);
+				}
+			}else {
+				$statement=$this->pdo->prepare("select node_id as id from node_links where directory_id=:dir_id");
+					$statement->bindParam(':dir_id',$directory_id);
+			}
+			if($statement->execute()==false)
+			{
+				error_log("there is an error in the sql statement in get_node_id");
+				exit(1);
+			}
+				
+			while($hold=$statement->fetch(PDO::FETCH_ASSOC))
+			{
+				print_r($hold);
+				array_push($ret,$hold["id"]);
+			}
+			return $ret;
+
+		}
+		function get_random_node_name(string $prefix)
+		{
+			do{
+				$proposal=uniqid($prefix,true);
+			}while($this->get_node_id($proposal,NULL)!=NULL);
+			return $proposal;
+		}
+		/*returns NULL if node doesn't exist*/
+		/*if name is NULL return all node ids in the directory*/
+		/*if directory is NULL return all node ids with the name name*/
+		/*if both are null return NULL*/
+		/*returns node id*/
+		function create_dangling_directory(): int
+		{
+			$dir_name=$this->get_random_node_name("");
+			global $storage_root;
+
+			$prep=$this->pdo->prepare("insert into nodes(is_directory,relative_path,name) values(true,:root,:name)");
+			$prep->bindParam(':name',$dir_name);
+			$prep->bindParam(':root',$storage_root);
+			if($prep->execute()==false)
+			{
+				error_log("tried to create a dangling directory but sql statement failed. Fatal error!");
+				exit(1);
+			}
+			
+			$id=$this->get_node_id($dir_name,NULL);
+			if(count($id)!=1)
+			{
+				error_log("created a dangling directory but couldn't find it afterward. Fatal error!");
+				exit(1);
+			}
+
+			//print count($id);
+			return $id[0];
+		}
 		/*returns false if username is taken, email is not checked here*/
 		function register_user(string $user,string $password,string $email) : bool
 		{
@@ -91,11 +172,18 @@ require_once "misc.php";
 				}else
 				{
 					$hashed_pass=password_hash($password,$password_hash_algo);
-					$prep=$this->pdo->prepare("insert into users(username,password,email) values(:username,:password,:email)");
+					$home_dir=$this->create_dangling_directory();
+					$prep=$this->pdo->prepare("insert into users(username,password,email,home_directory) values(:username,:password,:email,:dir)");
 					$prep->bindParam(':username',$user);
 					$prep->bindParam(':password',$hashed_pass);
 					$prep->bindParam(':email',$email);
-					$prep->execute();
+					$prep->bindParam(':dir',$home_dir);
+					if($prep->execute()==false)
+					{
+						error_log("can't create user because there was an error in the sql statement");
+						/*todo make an error page*/
+						exit(1);
+					}
 				}
 				return true;
 			}

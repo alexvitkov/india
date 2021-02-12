@@ -3,14 +3,11 @@
 
 $domain_name="localhost";
 
-<<<<<<< HEAD
-=======
 if (file_exists("/home/alex")) {
     $database_name="alex";
     $database_username="alex";
     $database_password="lol";
     $database_location="127.0.0.1";
->>>>>>> f1cd0085cd8dba8b25818fc998d315b28e6c13a5
 
     $storage_root = "/home/alex/fileup_storage";
 }
