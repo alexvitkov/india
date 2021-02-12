@@ -1,4 +1,4 @@
-var FORM_ASYNC = false;
+var FORM_ASYNC = true;
 
 const upload_form    = document.getElementById("upload_form");
 const the_file       = document.getElementById("the_file");
