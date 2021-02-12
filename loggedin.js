@@ -106,8 +106,9 @@ function load_dir() {
         files = [];
 
         var json = JSON.parse(this.responseText);
+        console.log(json);
         for (const f of json) {
-            add_file_visuals(f.name, f.is_directory, f.mimetype);
+            add_file_visuals(f.name, f.is_directory && f.is_directory != "0", f.mimetype);
         }
     };
     xhr.send(data);
