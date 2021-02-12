@@ -10,9 +10,11 @@ const current_directory = document.getElementById("current_directory");
 the_file.onchange = on_file_added;
 
 var pwd = [];
-const pending_uploads = [];
 
 var context_menu = null;
+var dragging = null;
+var dragging_placeholder = null;
+var dragging_offset_x = 0, dragging_offset_y = 0;
 
 class FileView {
     constructor(filename, visuals, mimetype, is_directory) {
@@ -40,39 +42,26 @@ function on_file_added(_e) {
             return;
         }
 
-        var fileview = add_file_visuals(filename_input.value, false, "pending");
-
         // Send the form asynchronously through the fetch api
         fetch(upload_form.action, {
             method: upload_form.method,
             body: new FormData(upload_form)
         }).then((resp) => {
             if (resp.status == 200) {
-                done_upload(fileview);
+                load_dir();
             } else {
                 alert("Upload failed");
             }
         }, () => {
             alert("Upload failed")
         });
-        
-        pending_uploads.push(fileview);
     }
     else {
         alert("No files selected");
     }
 }
 
-function done_upload(fileview) {
-    var index = pending_uploads.indexOf(fileview);
-    if (index >= 0)
-        pending_uploads.splice(index, 1);
-
-    load_dir();
-}
-
 function load_dir() {
-
     while (the_path.children.length > 1)
         the_path.removeChild(the_path.lastChild);
 
@@ -106,10 +95,23 @@ function load_dir() {
         files = [];
 
         var json = JSON.parse(this.responseText);
-        console.log(json);
         for (const f of json) {
-            add_file_visuals(f.name, f.is_directory && f.is_directory != "0", f.mimetype);
+            var view = new FileView(f.name, null, f.mimetype, f.is_directory && f.is_directory != "0");
+            files.push(view);
         }
+
+        files.sort((a, b) => {
+           if (a.is_directory && !b.is_directory)
+               return -1;
+           if (!a.is_directory && b.is_directory)
+               return 1;
+            return a.filename.localeCompare(b.filename);
+        });
+
+        for (const f of files) {
+            add_file_visuals(f);
+        }
+
     };
     xhr.send(data);
 }
@@ -164,23 +166,47 @@ function new_folder() {
     xhr.send(data);
 }
 
-function add_file_visuals(name, is_directory, mimetype) {
-    var fileDiv = document.createElement('div');
+function begin_drag(e, fileview) {
+    if (dragging) {
+        alert("AAAAAAAAAAAAAA");
+    }
+
+    dragging_placeholder = document.createElement('div');
+    fileview.visuals.parentNode.insertBefore(dragging_placeholder, fileview.visuals);
+
+    dragging = fileview.visuals;
+
+    var elemRect = dragging.getBoundingClientRect();
+
+    dragging_offset_x = elemRect.width - (elemRect.left - e.clientX);
+    dragging_offset_y = elemRect.top  - e.clientY;
+
+    dragging.style.position = "absolute";
+    dragging.style.top = "0px";
+    dragging.style.left = "0px";
+    dragging.style.width  = elemRect.width  + "px";
+    dragging.style.height = elemRect.height + "px";
+    document.body.appendChild(dragging);
+}
+
+function add_file_visuals(fileview) {
+    var visuals = document.createElement('div');
+    fileview.visuals = visuals;
 
     var img = document.createElement('img');
     var filename = document.createElement('div');
 
-    if (is_directory!=0) {
+    if (fileview.is_directory!=0) {
         img.src="/mimeicons/directory.png";
-        fileDiv.onclick = () => {
+        visuals.onclick = () => {
             pwd.push(name);
             load_dir();
         }
     } else {
-        img.src=`/mimeicons/${mimetype.replace("/", "-")}.png`;
+        img.src=`/mimeicons/${fileview.mimetype.replace("/", "-")}.png`;
     }
 
-    fileDiv.oncontextmenu = (e) => {
+    visuals.oncontextmenu = (e) => {
         context(e, [
             ['Open', () => {
                 if (is_directory) {
@@ -197,21 +223,22 @@ function add_file_visuals(name, is_directory, mimetype) {
         e.preventDefault();
     }
 
-    fileDiv.classList.add('file');
+    visuals.ondragstart = (e) => {
+        begin_drag(e, fileview);
+        e.preventDefault();
+    };
+
+    visuals.classList.add('file');
     filename.classList.add('filename');
-    filename.innerText = name;
+    filename.innerText = fileview.filename;
 
-    if (mimetype == "pending")
-        fileDiv.classList.add('pending');
+    if (fileview.mimetype == "pending")
+        visuals.classList.add('pending');
 
-    fileDiv.appendChild(img);
-    fileDiv.appendChild(filename);
+    visuals.appendChild(img);
+    visuals.appendChild(filename);
 
-    current_directory.appendChild(fileDiv);
-
-    var file = new FileView(name, fileDiv, mimetype, is_directory);
-    files.push(file);
-    return file;
+    current_directory.appendChild(visuals);
 }
 
 function begin_upload() {
@@ -227,7 +254,6 @@ function context(e, entries) {
 
     context_menu.style.left = e.clientX + "px";
     context_menu.style.top  = e.clientY + "px";
-
 
     for (const e of entries) {
         const li = document.createElement('li');
@@ -249,6 +275,13 @@ function get_path() {
 document.body.onclick = () => {
     if (context_menu)
         context_menu.remove();
+}
+
+document.body.onmousemove = (e) => {
+    if (dragging) {
+        dragging.style.left = (e.clientX - dragging_offset_x) + "px";
+        dragging.style.top  = (e.clientY + dragging_offset_y) + "px";
+    }
 }
 
 load_dir();
