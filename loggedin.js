@@ -13,6 +13,7 @@ var pwd = [];
 
 var context_menu = null;
 var dragging = null;
+var dragging_fileview;
 var dragging_placeholder = null;
 var dragging_offset_x = 0, dragging_offset_y = 0;
 
@@ -94,7 +95,10 @@ function load_dir() {
             f.visuals.remove();
         files = [];
 
-        var json = JSON.parse(this.responseText);
+        var json = JSON.parse(xhr.responseText);
+        if (!json)
+            return;
+
         for (const f of json) {
             var view = new FileView(f.name, null, f.mimetype, f.is_directory && f.is_directory != "0");
             files.push(view);
@@ -117,7 +121,7 @@ function load_dir() {
 }
 
 function delete_file(filename) {
-    var file_full_path = get_path() + filename;
+    var file_full_path = get_path() + "/" + filename;
 
     var data = new FormData();
     data.append('path', file_full_path);
@@ -174,6 +178,7 @@ function begin_drag(e, fileview) {
     fileview.visuals.parentNode.insertBefore(dragging_placeholder, fileview.visuals);
 
     dragging = fileview.visuals;
+    dragging_fileview = fileview;
     dragging.classList.add("dragged");
 
     var elemRect = dragging.getBoundingClientRect();
@@ -202,6 +207,10 @@ function end_drag(e) {
     dragging = null;
 }
 
+function drop_handler(dst, src) {
+    alert(`Dropped ${dst.filename} on ${src.filename}`);
+}
+
 function add_file_visuals(fileview) {
     var visuals = document.createElement('div');
     fileview.visuals = visuals;
@@ -212,7 +221,7 @@ function add_file_visuals(fileview) {
     if (fileview.is_directory!=0) {
         img.src="/mimeicons/directory.png";
         visuals.onclick = () => {
-            pwd.push(name);
+            pwd.push(fileview.filename);
             load_dir();
         }
     } else {
@@ -223,7 +232,7 @@ function add_file_visuals(fileview) {
         context(e, [
             ['Open', () => {
                 if (is_directory) {
-                    pwd.push(name);
+                    pwd.push(fileview.filename);
                     load_dir();
                 } else {
                     alert('not implemented');
@@ -238,6 +247,14 @@ function add_file_visuals(fileview) {
 
     visuals.ondragstart = (e) => {
         begin_drag(e, fileview);
+        e.preventDefault();
+    };
+
+    visuals.onmouseup = (e) => {
+        if (dragging) {
+            drop_handler(dragging_fileview, fileview);
+            end_drag();
+        }
         e.preventDefault();
     };
 
@@ -282,6 +299,8 @@ function get_path() {
     var path = "/";
     for (const d of pwd)
         path += d + "/";
+    if (path.length > 1)
+        path = path.substring(0, path.length - 1);
     return path;
 }
 
