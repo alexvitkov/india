@@ -5,6 +5,7 @@
 <html>
     <head>
         <meta charset="utf-8">
+        <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
         <title>shady file upload</title> <link rel="stylesheet" type="text/css" href="css/style.css"> 
     </head>
 
