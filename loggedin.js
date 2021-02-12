@@ -8,7 +8,9 @@ const current_directory = document.getElementById("current_directory");
 
 the_file.onchange = on_file_added;
 
-const files = [];
+var files = [];
+
+const pwd = "/";
 
 const pending_uploads = [];
 
@@ -44,7 +46,26 @@ function on_file_added(_e) {
 
 }
 
-function add_file_visuals(name, pending) {
+function load_dir(pwd) {
+    var data = new FormData();
+    data.append('path', '/');
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/php/readdir.php', true);
+    xhr.onload = function () {
+        for (const f of files)
+            f[1].remove();
+        files = [];
+
+        var json = JSON.parse(this.responseText);
+        for (const f of json) {
+            add_file_visuals(f.name, f.mimetype);
+        }
+    };
+    xhr.send(data);
+}
+
+function add_file_visuals(name, mimetype) {
     var fileDiv = document.createElement('div');
 
     var img = document.createElement('img');
@@ -68,3 +89,5 @@ function add_file_visuals(name, pending) {
 function begin_upload() {
     the_file.click();
 }
+
+load_dir("/");
