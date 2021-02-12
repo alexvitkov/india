@@ -32,7 +32,6 @@ if($database->register_user($username,$password,$email))
 }
 
 
-$_SESSION['username'] = $username;
 header('Location: /');
 
 ?>

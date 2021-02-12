@@ -242,6 +242,7 @@ require_once "node.php";
 							nodes.node_id=node_access.node_id
 							where nodes.node_id=:dir_id
 							");
+			$dir_prep->bindParam(':dir_id',$dir_id);
 			if($dir_prep->execute()==false)
 			{
 				error_log("could not exedude dir sql statement in create_file_node");

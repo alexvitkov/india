@@ -2,6 +2,7 @@
 require_once "database.php";
 require_once "configuration.php";
 
+session_start();
 echo 1;
 if (!isset( $_POST["filename"]) || !isset($_FILES["the_file"]))
 {
@@ -13,10 +14,11 @@ echo 2;
 
 $file=$_FILES["the_file"];
 $filename=$_POST["filename"];
+$homedir=$_SESSION['user_object'];
 
 echo 3;
 
-$codename=$database->create_file_node($filename);
+$codename=$database->create_file_node($filename,"",$_SESSION['user_object']->home_directory);
 echo $codename;
 if($codename=="error")
 {
