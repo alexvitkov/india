@@ -218,7 +218,7 @@ function add_file_visuals(fileview) {
     var img = document.createElement('img');
     var filename = document.createElement('div');
 
-    if (fileview.is_directory!=0) {
+    if (fileview.is_directory) {
         img.src="/mimeicons/directory.png";
         visuals.onclick = () => {
             pwd.push(fileview.filename);
@@ -229,20 +229,22 @@ function add_file_visuals(fileview) {
     }
 
     visuals.oncontextmenu = (e) => {
-        context(e, [
-            ['Open', () => {
-                if (is_directory) {
-                    pwd.push(fileview.filename);
-                    load_dir();
-                } else {
-                    alert('not implemented');
-                }
-            }],
-            ['Rename', () => { rename_file(fileview.filename); }],
-            ['Share',  () => {alert('not implemented')}],
-            ['Delete', () => { delete_file(fileview.filename); }],
-        ]);
+        if (!dragging) {
+            context(e, [
+                ['Open', () => {
+                    if (fileview.is_directory) { pwd.push(fileview.filename);
+                        load_dir();
+                    } else {
+                        alert('not implemented');
+                    }
+                }],
+                ['Rename', () => { rename_file(fileview.filename); }],
+                ['Share',  () => {alert('not implemented')}],
+                ['Delete', () => { delete_file(fileview.filename); }],
+            ]);
+        }
         e.preventDefault();
+        e.stopPropagation();
     }
 
     visuals.ondragstart = (e) => {
@@ -319,6 +321,15 @@ document.body.onmousemove = (e) => {
 document.body.onmouseup = (e) => {
     if (dragging)
         end_drag();
+}
+
+document.body.oncontextmenu = (e) => {
+    if (dragging) {
+        end_drag();
+        e.preventDefault();
+    }
+    if (context_menu)
+        context_menu.remove();
 }
 
 load_dir();
