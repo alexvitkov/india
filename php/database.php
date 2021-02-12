@@ -2,6 +2,7 @@
 require_once "configuration.php";
 require_once "user.php";
 require_once "misc.php";
+require_once "node.php";
 
 /*handles database stuff*/
 	class Database
@@ -71,6 +72,17 @@ require_once "misc.php";
 			{
 				return false;
 			}
+		}
+		function get_home_id($user_id)
+		{
+			$statement=$this->pdo->prepare("select home_directory
+							from users
+							where user_id=:id
+							");
+			$statement->bindParam(':id',$user_id);
+
+			$ret=$statement->execute(PDO::FETCH_ASSOC);
+			return $ret["home_directory"];
 		}
 		function get_node_id($name,$directory_id)
 		{
@@ -152,6 +164,29 @@ require_once "misc.php";
 			//print count($id);
 			return $id[0];
 		}
+		function are_linked(int $directory_id,int $node_id): bool
+		{
+			$prepare=$this->pdo->prepare("select node_id
+						      from node_links
+						      where node_id=:node_id and directory_id=:dir_id
+						      ");
+			$prepare->bindParam(':node_id',$node_id);
+			$prepare->bindParam(':dir_id',$directory_id);
+			if($prepare->execute()==false)
+			{
+				error_log("there is an sql error in are_linked");
+				/*quiet error*/
+				return false;
+			}
+			if(count($prepare->fetch(PDO::FETCH_ASSOC))==1)
+			{
+				return true;
+			}else
+			{
+				return false;
+			}
+		}
+
 		/*returns false if username is taken, email is not checked here*/
 		function register_user(string $user,string $password,string $email) : bool
 		{
@@ -190,5 +225,5 @@ require_once "misc.php";
 		}
 	}
 
-
+$database=new Database();
 ?>

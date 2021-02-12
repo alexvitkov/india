@@ -222,7 +222,7 @@ input[type=submit]:hover {
 	z-index: -200;
 }
 
-#loginform {
+#signupform {
     display: none;
 }
 

@@ -37,7 +37,6 @@ update();
 
 
 
-
 function clear_hero_errors()
 {
 	let errors = document.getElementsByClassName("hero_form_error");
