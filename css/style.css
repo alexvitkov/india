@@ -166,19 +166,27 @@ form p {
 	to   { opacity: 1; }
 }
 
-input:not([type=file]) {
+.content > input {
 	min-width: 300px;
+}
+
+input:not([type=file]) {
 	border: 1px solid #bbb;
-	padding: 0.5rem;
+	padding: 0.8rem 2rem 0.5rem 2rem;
 	font-size: inherit;
 	font-family: inherit;
 	border-radius: 0.3rem;
-	background: #fdfdfd;
-	transition: background 0.15s, border-color 0.35s;
+	background: #f6f6f6;
+}
+
+input[type=button], button, input[type=submit] {
+	cursor: pointer;
+}
+input[type=button]:hover, button:hover, input[type=submit]:hover {
+    background: white;
 }
 
 input[type=submit] {
-	cursor: pointer;
 	margin-top: 2rem;
 	width: 100%;
 	display: block;
