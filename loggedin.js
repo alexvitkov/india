@@ -153,7 +153,7 @@ function add_file_visuals(name, is_directory, mimetype) {
     var img = document.createElement('img');
     var filename = document.createElement('div');
 
-    if (is_directory) {
+    if (is_directory!=0) {
         img.src="/mimeicons/directory.png";
         fileDiv.onclick = () => {
             pwd.push(name);
