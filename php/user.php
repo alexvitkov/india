@@ -4,7 +4,7 @@
 		public $user_id;
 		public $username;
 		public $email_address;
-		public $current_directory;
+		public $home_directory;
 	}
 
 ?>

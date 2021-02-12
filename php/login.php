@@ -21,6 +21,8 @@ if(!$user)
 }
 
 $_SESSION['username'] = $user->username;
+$_SESSION['user_object'] = $user;
+
 header('Location: /');
 
 ?>

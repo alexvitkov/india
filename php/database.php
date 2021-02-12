@@ -50,7 +50,7 @@ require_once "node.php";
 		{
 			$ret=new User;
 
-			$prep=$this->pdo->prepare("select user_id,username,email,password from users where username=:username");
+			$prep=$this->pdo->prepare("select user_id,username,email,password,home_directory from users where username=:username");
 			$prep->bindParam(':username',$user);
 			$prep->execute();
 
@@ -63,6 +63,7 @@ require_once "node.php";
 					$ret->user_id=$hold["user_id"];
 					$ret->username=$hold["username"];
 					$ret->email_address=$hold["email"];
+					$ret->home_directory=$hold["home_directory"];
 					return $ret;
 				}else
 				{
@@ -84,69 +85,115 @@ require_once "node.php";
 			$ret=$statement->execute(PDO::FETCH_ASSOC);
 			return $ret["home_directory"];
 		}
+
+
+		/*returns assoc array*/
+		function get_nodes_with_name($name)
+		{
+			$statement=$this->pdo->prepare(
+					"select node_id
+					 from node_links
+					 where name=:name"
+					);
+			$statement->bindParam(':name',$name);
+			if($statement->execute()==NULL)
+			{
+				error_log("there was a problem with the sql statement at get_nodes_with_name");
+				return [];
+			}
+			return $statement->fetchAll(PDO::FETCH_ASSOC);
+		}
+
+		/*returns assoc array*/
+		function get_node_with_code($code)
+		{
+			$statement=$this->pdo->prepare(
+					"select node_id as id
+					 from nodes
+					 where code=:code"
+					);
+			$statement->bindParam(':code',$code);
+			if($statement->execute()==NULL)
+			{
+				error_log("there was a problem with the sql statement at get_nodes_with_code");
+				return [];
+			}
+			return $statement->fetchAll(PDO::FETCH_ASSOC);
+		}
+		/* I think this only makes sense if node is a dir*/
+		/* returns assoc array of nodes*/
+		function get_links_of(int $node_id)
+		{
+			$statement=$this->pdo->prepare("
+							select node_links.node_id as id,
+								node_links.name as name,
+								node_links.note as note,
+								nodes.is_directory as is_directory,
+								nodes.code as code
+								from node_links
+								inner join nodes on
+								nodes.node_id=node_links.node_id
+								where nodes.node_id=:id
+							");
+			$statement->bindParam(':id',$node_id);
+			if($statement->execute()==false)
+			{
+				error_log("there is an error in the sql statement in get_links_of");
+				return [];
+			}
+			return $statement->fetchAll(PDO::FETCH_ASSOC);
+		}
+
+		/*if both are not null returns the id of the node with the name name in the directory_id node*/
 		function get_node_id($name,$directory_id)
 		{
-			$hold=NULL;
-			$statement=NULL;
-			$ret=[];
-			if($name != NULL)
-			{
-				if($directory_id!=NULL)
-				{
-					$statement=$this->pdo->prepare(
-						"select nl.node_id as id from node_links nl
-						inner join nodes n on n.node_id=nl.node_id 
-						where name=:name and directory_id=:directory_id)");
-					$statement->bindParam(':name',$name);
-					$statement->bindParam(':directory_id',$directory_id);
-				}else
-				{
-					/*get all node_ids with the name name*/
-					$statement=$this->pdo->prepare("select node_id as id from nodes where name=:name");
-					$statement->bindParam(':name',$name);
-				}
-				if($statement==NULL)
-				{
-					error_log("statement is null");
-					exit(1);
-				}
-			}else {
-				$statement=$this->pdo->prepare("select node_id as id from node_links where directory_id=:dir_id");
-					$statement->bindParam(':dir_id',$directory_id);
-			}
+			$statement=$this->pdo->prepare(
+				"select nl.node_id as id from node_links nl
+				inner join nodes n on n.node_id=nl.node_id 
+				where name=:name and directory_id=:directory_id)");
+			$statement->bindParam(':name',$name);
+			$statement->bindParam(':directory_id',$directory_id);
 			if($statement->execute()==false)
 			{
 				error_log("there is an error in the sql statement in get_node_id");
-				exit(1);
+				return NULL;
 			}
-				
-			while($hold=$statement->fetch(PDO::FETCH_ASSOC))
+			$hold=$statement->fetch(PDO::FETCH_ASSOC);
+			if($hold==false)
 			{
-				print_r($hold);
-				array_push($ret,$hold["id"]);
+				return NULL;
+			}else
+			{
+				return $hold["id"];
 			}
-			return $ret;
 
 		}
+
+
+
+
+
+		/*is used to get a random codename for the node as well*/
 		function get_random_node_name(string $prefix)
 		{
 			do{
 				$proposal=uniqid($prefix,true);
-			}while($this->get_node_id($proposal,NULL)!=NULL);
+			}while(count($this->get_nodes_with_name($proposal))!=0);
 			return $proposal;
 		}
-		/*returns NULL if node doesn't exist*/
-		/*if name is NULL return all node ids in the directory*/
-		/*if directory is NULL return all node ids with the name name*/
-		/*if both are null return NULL*/
-		/*returns node id*/
+
+
+
+
+
+		/*this is used to create seperate roots for the users*/
 		function create_dangling_directory(): int
 		{
-			$dir_name=$this->get_random_node_name("");
+			$code_name=$this->get_random_node_name("");
 			global $storage_root;
 
-			$prep=$this->pdo->prepare("insert into nodes(is_directory,relative_path,name) values(true,:root,:name)");
-			$prep->bindParam(':name',$dir_name);
+			$prep=$this->pdo->prepare("insert into nodes(is_directory,relative_path,code) values(true,:root,:code)");
+			$prep->bindParam(':code',$code_name);
 			$prep->bindParam(':root',$storage_root);
 			if($prep->execute()==false)
 			{
@@ -154,7 +201,7 @@ require_once "node.php";
 				exit(1);
 			}
 			
-			$id=$this->get_node_id($dir_name,NULL);
+			$id=$this->get_node_with_code($code_name);
 			if(count($id)!=1)
 			{
 				error_log("created a dangling directory but couldn't find it afterward. Fatal error!");
@@ -162,18 +209,53 @@ require_once "node.php";
 			}
 
 			//print count($id);
-			return $id[0];
+			return $id[0]["id"];
 		}
-		/*returns the file name as it must be in the filesystem*/
-		function create_file_node(string $filename): string
+
+		/*links source to target*/
+		function link_nodes(int $target_id,int $source_id,string $name,string $note)
+		{
+			$statement=$this->pdo->prepare("
+							insert into 
+
+							");
+		}
+		/*returns the file name as it must be in the filesystem relative to the storage root*/
+		function create_file_node(string $filename,int $dir_id): string
 		{
 			global $storage_root;
+			/*checkout the directory*/
+			$dir_prep=$this->pdo->prepare("
+							select 
+							nodes.is_directory as is_directory,
+							node_access.can_edit as can_edit
+							from nodes
+							inner join node_access on 
+							nodes.node_id=node_access.node_id
+							where nodes.node_id=:dir_id
+							");
+			if($dir_prep->execute()==false)
+			{
+				error_log("could not exedude dir sql statement in create_file_node");
+				return "error";
+			}
+			$dir=$dir_prep->fetch(PDO::FETCH_ASSOC);
+			if($dir["is_directory"]==false)
+			{
+				return "error";
+			}
+			if($dir["can_edit"]==false)
+			{
+				/*TODO*/
+				return "error";
+			}
+
+			/*generate the node*/
 			$code=$this->get_random_node_name("");
 			if($filename==NULL)return "error";
-			$prep=$this->pdo->prepare("insert into nodes(is_directory,relative_path,name,code)
-						   values(false,:root,:name,:code)
+			$prep=$this->pdo->prepare("insert into nodes(is_directory,relative_path,code)
+						   values(false,:root,:code)
 						   ");
-			$prep->bindParam(':name',$filename);
 			$prep->bindParam(':root',$storage_root);
 			$prep->bindParam(':code',$code);
 
@@ -183,8 +265,10 @@ require_once "node.php";
 				/*not so quiet error*/
 				return "error";
 			}
+			/*link the node to the directory*/
 			return $code;
 		}
+		/*checks if there is a link between two node_id-s*/
 		function are_linked(int $directory_id,int $node_id): bool
 		{
 			$prepare=$this->pdo->prepare("select node_id

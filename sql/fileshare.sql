@@ -12,7 +12,6 @@ create table nodes (
 	is_directory boolean default false,
 	relative_path varchar(500) not null,
 	type varchar(20) not null default 'data',
-	note varchar(200) not null default "",
 	code varchar(100) not null default "error",
 	primary key (node_id)
 );
@@ -43,6 +42,7 @@ create table node_links (
 	directory_id int not null,
 	node_id int not null,
 	name varchar(100) not null default 'no name',
+	note varchar(200) not null default "",
 	check (directory_id != node_id), 
 	foreign key (directory_id) references nodes(node_id),
 	foreign key (node_id) references nodes(node_id)

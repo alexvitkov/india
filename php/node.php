@@ -1,26 +1,31 @@
 <?php 
 require_once "database.php";
+require_once "user.php";
 
-	class Node
+	
+	/*returns an assoc arrat of Node-s*/
+	/*path is in terms of the simulated filesystem*/
+	function get_directory(string $abstract_path,User $user)
 	{
-		public $node_id;
-		public $is_directory;
-		public $relative_path;
-		public $type;
-		public $name;
-		public $note;
-		function __construct($node_id)
+		if($abstract_path[0]!="/")
 		{
-			$this->node_id=$node_id;
+			return NULL;
 		}
-	}
-	class Directory_Node extends Node
-	{
-		public $node_list;
-		/*the path in terms of the simulated filesystem*/
-		function __construct(string $abstract_path)
+		if($component=strtok($abstract_path,"/")==false)
 		{
+			return NULL;
 		}
+		$current_dir=$database->get_node($component,$user->home_directory);
+		if($current_dir==NULL)
+			return NULL;
+		/*traverse path*/
+		while($component=strtok("/"))
+		{
+			$current_dir=get_node($component,$current_dir);
+			if($current_dir==NULL)
+				return NULL;
+		}
+		return get_links_of(NULL,$current_dir);
 	}
 
 ?>
