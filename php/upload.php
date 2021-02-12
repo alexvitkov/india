@@ -1,6 +1,6 @@
 <?php 
-require_once "database.php"
-require_once "configuration.php"
+require_once "database.php";
+require_once "configuration.php";
 
 if (!isset( $_POST["filename") || !isset($_POST["the_file"])
 {

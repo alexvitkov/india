@@ -1,9 +1,21 @@
 <?php 
 require_once "database.php";
 
-	class Current_Directory
+	class Node
 	{
 		public $node_id;
+		public $is_directory;
+		public $relative_path;
+		public $type;
+		public $name;
+		public $note;
+		function __construct($node_id)
+		{
+			$this->node_id=$node_id;
+		}
+	}
+	class Current_Directory
+	{
 		/*an array of the dir_ids taken to reach here*/
 		public $path;
 
