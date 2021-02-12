@@ -167,14 +167,14 @@ function new_folder() {
 }
 
 function begin_drag(e, fileview) {
-    if (dragging) {
-        alert("AAAAAAAAAAAAAA");
-    }
+    if (dragging)
+        end_drag();
 
     dragging_placeholder = document.createElement('div');
     fileview.visuals.parentNode.insertBefore(dragging_placeholder, fileview.visuals);
 
     dragging = fileview.visuals;
+    dragging.classList.add("dragged");
 
     var elemRect = dragging.getBoundingClientRect();
 
@@ -182,11 +182,24 @@ function begin_drag(e, fileview) {
     dragging_offset_y = elemRect.top  - e.clientY;
 
     dragging.style.position = "absolute";
-    dragging.style.top = "0px";
-    dragging.style.left = "0px";
     dragging.style.width  = elemRect.width  + "px";
     dragging.style.height = elemRect.height + "px";
     document.body.appendChild(dragging);
+
+    dragging.style.left = (e.clientX - dragging_offset_x) + "px";
+    dragging.style.top  = (e.clientY + dragging_offset_y) + "px";
+}
+
+function end_drag(e) {
+    dragging_placeholder.parentNode.insertBefore(dragging, dragging_placeholder);
+    dragging_placeholder.remove();
+    dragging.style.removeProperty("position");
+    dragging.style.removeProperty("width");
+    dragging.style.removeProperty("height");
+    dragging.style.removeProperty("left");
+    dragging.style.removeProperty("top");
+    dragging.classList.remove("dragged");
+    dragging = null;
 }
 
 function add_file_visuals(fileview) {
@@ -282,6 +295,11 @@ document.body.onmousemove = (e) => {
         dragging.style.left = (e.clientX - dragging_offset_x) + "px";
         dragging.style.top  = (e.clientY + dragging_offset_y) + "px";
     }
+}
+
+document.body.onmouseup = (e) => {
+    if (dragging)
+        end_drag();
 }
 
 load_dir();

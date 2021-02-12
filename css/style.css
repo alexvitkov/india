@@ -269,8 +269,11 @@ input[type=submit]:hover {
     border-radius: 0.3rem;
 }
 
-.file:hover {
-    padding: 0.5rem;
+.file.dragged {
+    border: none;
+}
+
+.file:hover:not(.dragged) {
     background: white;
     color: black;
     border-color: #ddd;
