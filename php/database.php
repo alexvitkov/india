@@ -135,12 +135,15 @@ require_once "node.php";
 		}
 
 		/*if both are not null returns the id of the node with the name name in the directory_id node*/
-		function get_node_id($name,$directory_id)
+		function get_node_id(string $name,int $directory_id)
 		{
-			$statement=$this->pdo->prepare(
-				"select nl.node_id as id from node_links nl
-				inner join nodes n on n.node_id=nl.node_id 
-				where name=:name and directory_id=:directory_id)");
+			$statement=$this->pdo->prepare("
+					select node_links.node_id as id
+					from node_links 
+					inner join nodes on
+					nodes.node_id=node_links.node_id 
+					where node_links.name=:name and node_links.directory_id=:directory_id
+				");
 			$statement->bindParam(':name',$name);
 			$statement->bindParam(':directory_id',$directory_id);
 			if($statement->execute()==false)
@@ -149,7 +152,7 @@ require_once "node.php";
 				return NULL;
 			}
 			$hold=$statement->fetch(PDO::FETCH_ASSOC);
-			if($hold==false)
+			if(gettype($hold)!="array")
 			{
 				return NULL;
 			}else
@@ -344,6 +347,12 @@ require_once "node.php";
 				return "error";
 			}
 
+			/*check if node with given name exists*/
+			if($this->get_node_id($filename,$dir_id)!=NULL)
+			{
+				error_log("filename taken");
+				return "filename taken";
+			}
 			/*generate the node*/
 			$code=$this->get_random_node_name("");
 			if($filename==NULL)return "error";

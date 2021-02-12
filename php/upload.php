@@ -25,6 +25,11 @@ if($codename=="error")
 	http_response_code(400);
 	exit(0);
 }
+if($codename=="filename taken")
+{
+	http_response_code(409);
+	exit(0);
+}
 move_uploaded_file($file['tmp_name'], "$storage_root/$codename");
 
 http_response_code(200);
