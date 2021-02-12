@@ -168,22 +168,22 @@ require_once "node.php";
 		function create_file_node(string $filename): string
 		{
 			global $storage_root;
-			$code=get_random_node_name("");
-			if($filename==NULL)return false;
+			$code=$this->get_random_node_name("");
+			if($filename==NULL)return "error";
 			$prep=$this->pdo->prepare("insert into nodes(is_directory,relative_path,name,code)
 						   values(false,:root,:name,:code)
 						   ");
 			$prep->bindParam(':name',$filename);
 			$prep->bindParam(':root',$storage_root);
-
 			$prep->bindParam(':code',$code);
+
 			if($prep->execute()==false)
 			{
 				error_log("could not upload file");
 				/*not so quiet error*/
 				return "error";
 			}
-			return code;
+			return $code;
 		}
 		function are_linked(int $directory_id,int $node_id): bool
 		{

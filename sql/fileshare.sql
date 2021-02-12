@@ -1,3 +1,12 @@
+/*BEWARE!*/
+drop table if exists nodes;
+drop table if exists users;
+drop table if exists node_access;
+drop table if exists node_links;
+
+
+
+
 create table nodes (
 	node_id int not null auto_increment,
 	is_directory boolean default false,
