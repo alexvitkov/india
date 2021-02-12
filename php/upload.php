@@ -9,8 +9,6 @@ if (!isset( $_POST["filename"]) || !isset($_FILES["the_file"]))
 	exit(1);
 }
 
-echo "adsf";
-
 $file = $_FILES["the_file"];
 $filename= $_POST["filename"];
 
