@@ -19,7 +19,6 @@ if($codename=="error")
 	http_response_code(400);
 	exit(0);
 }
-error_log($file['tmp_name']);
 move_uploaded_file($file['tmp_name'], "$storage_root/$codename");
 
 http_response_code(200);
