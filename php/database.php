@@ -216,12 +216,20 @@ require_once "node.php";
 		function link_nodes(int $target_id,int $source_id,string $name,string $note)
 		{
 			$statement=$this->pdo->prepare("
-							insert into 
-
+							insert into node_links(directory_id,node_id,name,note)
+							values (:dir,:node,:name,:note)
 							");
+			$statement->bindParam(':dir',$target_id);
+			$statement->bindParam(':node',$source_id);
+			$statement->bindParam(':name',$name);
+			$statement->bindParam(':note',$note);
+			if($statement->execute()==false)
+			{
+				error_log("there was an error with the statement ni link_nodes");
+			}
 		}
 		/*returns the file name as it must be in the filesystem relative to the storage root*/
-		function create_file_node(string $filename,int $dir_id): string
+		function create_file_node(string $filename,string $note,int $dir_id): string
 		{
 			global $storage_root;
 			/*checkout the directory*/
@@ -256,7 +264,7 @@ require_once "node.php";
 			$prep=$this->pdo->prepare("insert into nodes(is_directory,relative_path,code)
 						   values(false,:root,:code)
 						   ");
-			$prep->bindParam(':root',$storage_root);
+			$prep->bindParam(':root',"/".$code);
 			$prep->bindParam(':code',$code);
 
 			if($prep->execute()==false)
@@ -265,7 +273,9 @@ require_once "node.php";
 				/*not so quiet error*/
 				return "error";
 			}
+			$new_id=get_node_with_code($code);
 			/*link the node to the directory*/
+			link_nodes($dir_id,$new_id,$filename,$note);
 			return $code;
 		}
 		/*checks if there is a link between two node_id-s*/
