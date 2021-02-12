@@ -3,11 +3,11 @@
         <h2 style="display: flex; gap: 0rem;">
             <button id="upload_btn" onclick="begin_upload()">Upload</button>
             <div class="separator"></div>
-            <div class="path">
-                <!-- <a class="pathentry" href="#"> <?php echo $_SESSION['username'] ?>'s files/</a><a class="pathentry" href="#">foo/</a><a class="pathentry" href="#">bar</a> -->
-                <button class="pathentry">Haha's files</button>
-                <div class="separator">»</div>
-                <button class="pathentry">Haha's files</button>
+            <button id="upload_btn" onclick="begin_upload()">New Folder</button>
+            <div class="separator"></div>
+            <div class="path" id="the_path">
+                <!-- <a class="pathentry" href="#"> /</a><a class="pathentry" href="#">foo/</a><a class="pathentry" href="#">bar</a> -->
+                <button class="pathentry" onclick="pwd.length = 0; load_dir();"><?php echo $_SESSION['username'] ?>'s files</button>
             </div>
         </h2>
 

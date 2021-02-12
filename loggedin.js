@@ -4,13 +4,12 @@ const upload_form    = document.getElementById("upload_form");
 const the_file       = document.getElementById("the_file");
 const filename_input = document.getElementById("filename");
 const upload_btn     = document.getElementById("upload_btn");
+const the_path       = document.getElementById("the_path");
 const current_directory = document.getElementById("current_directory");
 
 the_file.onchange = on_file_added;
 
-
-const pwd = "/";
-
+var pwd = [];
 const pending_uploads = [];
 
 class FileView {
@@ -48,8 +47,7 @@ function on_file_added(_e) {
         }).then((resp) => {
             if (resp.status == 200) {
                 done_upload(fileview);
-            }
-            else {
+            } else {
                 alert("Upload failed");
             }
         }, () => {
@@ -67,12 +65,40 @@ function done_upload(fileview) {
     var index = pending_uploads.indexOf(fileview);
     if (index >= 0)
         pending_uploads.splice(index, 1);
-    load_dir(pwd);
+
+    load_dir();
 }
 
-function load_dir(pwd) {
+function load_dir() {
     var data = new FormData();
-    data.append('path', '/');
+
+    var path = "/";
+    for (const d of pwd)
+        path += d + "/";
+
+    while (the_path.children.length > 1)
+        the_path.removeChild(the_path.lastChild);
+
+    for (let i = 0; i < pwd.length; i++) {
+        var d = pwd[i];
+
+        var separator_div = document.createElement('div');
+        separator_div.classList.add('separator');
+        the_path.appendChild(separator_div);
+        separator_div.innerText = "»";
+
+        var entry = document.createElement('button');
+        entry.classList.add('pathentry');
+        entry.innerText = d;
+        the_path.appendChild(entry);
+
+        entry.onclick = () => {
+            pwd.length = i + 1;
+            load_dir();
+        }
+    }
+
+    data.append('path', path);
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/readdir.php', true);
@@ -97,6 +123,10 @@ function add_file_visuals(name, is_directory, mimetype) {
 
     if (is_directory) {
         img.src="/mimeicons/directory.png";
+        fileDiv.onclick = () => {
+            pwd.push(name);
+            load_dir();
+        }
     }
     else {
         img.src=`/mimeicons/${mimetype.replace("/", "-")}.png`;
@@ -123,4 +153,4 @@ function begin_upload() {
     the_file.click();
 }
 
-load_dir("/");
+load_dir();

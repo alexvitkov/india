@@ -295,7 +295,7 @@ input[type=submit]:hover {
 
 .filesystem > h2 button {
     border: none;
-    padding: 0.3rem 0.7rem;
+    padding: 0.3rem 1.1rem;
     background: inherit;
     border-radius: 0;
 }
