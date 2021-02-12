@@ -46,6 +46,9 @@ require_once "user.php";
 		{
 			$dir_id=$database->create_dangling_directory();
 			$database->link_nodes($parent_dir_id,$dir_id,$directory_name,$note);
+
+			$database->give_view_access($dir_id, $user->user_id);
+			$database->give_edit_access($dir_id, $user->user_id);
 			return $dir_id;
 		}
 	}

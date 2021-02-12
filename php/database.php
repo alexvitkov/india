@@ -337,8 +337,10 @@ require_once "node.php";
 			{
 				error_log("could not exedude dir sql statement in create_file_node");
 				return "error";
-			}
-			if(($dir=$dir_prep->fetch(PDO::FETCH_ASSOC))==false)
+            }
+
+            $dir=$dir_prep->fetch(PDO::FETCH_ASSOC);
+			if($dir == false)
 			{
 				error_log("create_file_node dir isnt a directory");
 				return "error";

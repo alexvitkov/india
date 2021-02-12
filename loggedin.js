@@ -6,6 +6,7 @@ const filename_input = document.getElementById("filename");
 const upload_btn     = document.getElementById("upload_btn");
 const the_path       = document.getElementById("the_path");
 const current_directory = document.getElementById("current_directory");
+const upload_parent_directory = document.getElementById("upload_parent_directory");
 
 the_file.onchange = on_file_added;
 
@@ -36,7 +37,8 @@ var files = [];
 
 function on_file_added(_e) {
     if (the_file.files.length >= 1) {
-        filename_input.value = the_file.files[0].name;
+        filename_input.value          = the_file.files[0].name;
+        upload_parent_directory.value = get_path();
 
         if (!FORM_ASYNC) {
             upload_form.submit();
