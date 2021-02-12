@@ -33,7 +33,6 @@ create table node_access (
 
 	can_view boolean not null default true,
 	can_edit boolean not null default false,
-	check (can_view=true or can_edit=true) ,
 	foreign key (node_id) references nodes(node_id),
 	foreign key (user_id) references users(user_id)
 );
