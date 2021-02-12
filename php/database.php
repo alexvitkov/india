@@ -164,6 +164,27 @@ require_once "node.php";
 			//print count($id);
 			return $id[0];
 		}
+		/*returns the file name as it must be in the filesystem*/
+		function create_file_node(string $filename): string
+		{
+			global $storage_root;
+			$code=get_random_node_name("");
+			if($filename==NULL)return false;
+			$prep=$this->pdo->prepare("insert into nodes(is_directory,relative_path,name,code)
+						   values(false,:root,:name,:code)
+						   ");
+			$prep->bindParam(':name',$filename);
+			$prep->bindParam(':root',$storage_root);
+
+			$prep->bindParam(':code',$code);
+			if($prep->execute()==false)
+			{
+				error_log("could not upload file");
+				/*not so quiet error*/
+				return "error";
+			}
+			return code;
+		}
 		function are_linked(int $directory_id,int $node_id): bool
 		{
 			$prepare=$this->pdo->prepare("select node_id

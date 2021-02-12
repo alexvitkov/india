@@ -5,7 +5,7 @@ create table nodes (
 	type varchar(20) not null default 'data',
 	name varchar(100) not null default 'no name',
 	note varchar(200) not null default "",
-	code char(30) not null default "error",
+	code varchar(100) not null default "error",
 	primary key (node_id)
 );
 

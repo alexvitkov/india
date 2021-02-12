@@ -1,22 +1,21 @@
 <?php 
+require_once "database.php"
+require_once "configuration.php"
 
-if (!array_key_exists('uf', $_FILES)) {
+if (!isset( $_POST["filename") || !isset($_POST["the_file"])
+{
 	http_response_code(400);
-	exit();
+	error_log("someone tried to upload something impropperly");
+	exit(1);
 }
 
-$file = $_FILES['uf'];
+$file = $_POST["the_file"];
+$filename= $_POST["filename"];
 
 
-if (file['error'] != 0) {
-	http_response_code(400);
-	exit();
-}
+$codename=create_file_node($filename);
 
-$m = md5_file($file['tmp_name']);
+copy($file['tmp_name'], "$storage_root/$codename");
 
-copy($file['tmp_name'], "screen/$m.png");
-
-echo "http://india.fmi.fail/screen/$m.png";
-
+echo $codename;
 ?>
