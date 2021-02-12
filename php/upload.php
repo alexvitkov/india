@@ -1,8 +1,8 @@
 <?php 
-require_once "database.php"
-require_once "configuration.php"
+require_once "database.php";
+require_once "configuration.php";
 
-if (!isset( $_POST["filename") || !isset($_POST["the_file"])
+if (!isset( $_POST["filename"]) || !isset($_POST["the_file"]))
 {
 	http_response_code(400);
 	error_log("someone tried to upload something impropperly");
