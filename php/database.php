@@ -118,7 +118,8 @@ require_once "node.php";
 								node_links.name as name,
 								node_links.note as note,
 								nodes.is_directory as is_directory,
-								nodes.code as code
+								nodes.code as code,
+								nodes.type as mimetype
 								from node_links
 								inner join nodes on
 								nodes.node_id=node_links.node_id
