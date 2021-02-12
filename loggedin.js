@@ -1,3 +1,5 @@
+var FORM_ASYNC = false;
+
 const upload_form    = document.getElementById("upload_form");
 const the_file       = document.getElementById("the_file");
 const filename_input = document.getElementById("filename");
@@ -13,6 +15,11 @@ const pending_uploads = [];
 function on_file_added(_e) {
     if (the_file.files.length >= 1) {
         filename_input.value = the_file.files[0].name;
+
+        if (!FORM_ASYNC) {
+            upload_form.submit();
+            return;
+        }
 
         // Send the form asynchronously through the fetch api
         fetch(upload_form.action, {
