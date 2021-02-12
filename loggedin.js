@@ -12,6 +12,8 @@ the_file.onchange = on_file_added;
 var pwd = [];
 const pending_uploads = [];
 
+var context_menu = null;
+
 class FileView {
     constructor(filename, visuals, mimetype, is_directory) {
         this.filename     = filename;
@@ -127,9 +129,25 @@ function add_file_visuals(name, is_directory, mimetype) {
             pwd.push(name);
             load_dir();
         }
-    }
-    else {
+    } else {
         img.src=`/mimeicons/${mimetype.replace("/", "-")}.png`;
+    }
+
+    fileDiv.oncontextmenu = (e) => {
+        context(e, [
+            ['Open', () => {
+                if (is_directory) {
+                    pwd.push(name);
+                    load_dir();
+                } else {
+                    alert('not implemented');
+                }
+            }],
+            ['Rename', () => {alert('not implemented')}],
+            ['Share',  () => {alert('not implemented')}],
+            ['Delete', () => {alert('not implemented')}],
+        ]);
+        e.preventDefault();
     }
 
     fileDiv.classList.add('file');
@@ -151,6 +169,32 @@ function add_file_visuals(name, is_directory, mimetype) {
 
 function begin_upload() {
     the_file.click();
+}
+
+function context(e, entries) {
+    if (context_menu)
+        context_menu.remove();
+
+    context_menu = document.createElement('ul');
+    context_menu.classList.add('context');
+
+    context_menu.style.left = e.clientX + "px";
+    context_menu.style.top  = e.clientY + "px";
+
+
+    for (const e of entries) {
+        const li = document.createElement('li');
+        li.innerText = e[0];
+        li.onclick = e[1];
+        context_menu.appendChild(li);
+    }
+
+    document.body.appendChild(context_menu);
+}
+
+document.body.onclick = () => {
+    if (context_menu)
+        context_menu.remove();
 }
 
 load_dir();

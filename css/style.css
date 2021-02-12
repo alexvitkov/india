@@ -331,3 +331,31 @@ input[type=submit]:hover {
 .pathentry:hover {
     text-decoration: underline;
 }
+
+.context {
+    background: white;
+    position: absolute;
+    z-index: 1000;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    top: 0;
+    left: 0;
+
+    border: 1px solid #ccc;
+	box-shadow: 0 0.3rem 0.5rem rgba(0,0,0,0.2);
+}
+
+.context > li {
+    padding: 0.4rem 1.5rem;
+    margin: 0;
+
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+.context > li:hover {
+    background: #2e91db;
+    color: white;
+}
