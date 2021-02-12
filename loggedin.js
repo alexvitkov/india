@@ -8,11 +8,21 @@ const current_directory = document.getElementById("current_directory");
 
 the_file.onchange = on_file_added;
 
-var files = [];
 
 const pwd = "/";
 
 const pending_uploads = [];
+
+class FileView {
+    constructor(filename, visuals, mimetype, is_directory) {
+        this.filename     = filename;
+        this.visuals      = visuals;
+        this.mimetype     = mimetype;
+        this.is_directory = is_directory;
+    }
+}
+
+var files = [];
 
 function on_file_added(_e) {
     if (the_file.files.length >= 1) {
@@ -54,24 +64,30 @@ function load_dir(pwd) {
     xhr.open('POST', '/php/readdir.php', true);
     xhr.onload = function () {
         for (const f of files)
-            f[1].remove();
+            f.visuals.remove();
         files = [];
 
         var json = JSON.parse(this.responseText);
         for (const f of json) {
-            add_file_visuals(f.name, f.mimetype);
+            add_file_visuals(f.name, f.is_directory, f.mimetype);
         }
     };
     xhr.send(data);
 }
 
-function add_file_visuals(name, mimetype) {
+function add_file_visuals(name, is_directory, mimetype) {
     var fileDiv = document.createElement('div');
 
     var img = document.createElement('img');
     var filename = document.createElement('div');
 
-    img.src="/mimeicons/application-pdf.png";
+    if (is_directory) {
+        img.src="/mimeicons/directory.png";
+    }
+    else {
+        img.src=`/mimeicons/${mimetype.replace("/", "-")}.png`;
+    }
+
     fileDiv.classList.add('file');
     filename.classList.add('filename');
     filename.innerText = name;
@@ -81,9 +97,9 @@ function add_file_visuals(name, mimetype) {
 
     current_directory.appendChild(fileDiv);
 
-    files.push([name, fileDiv]);
-
-    return fileDiv;
+    var file = new FileView(name, fileDiv, mimetype, is_directory);
+    files.push(file);
+    return file;
 }
 
 function begin_upload() {

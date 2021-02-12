@@ -277,8 +277,12 @@ input[type=submit]:hover {
     border-color: #ddd;
 }
 
+.file > img {
+    flex: 1 0 0;
+}
+
 .file:hover > img {
-    filter: brightness(150%);
+    filter: brightness(120%);
 }
 
 .path {
