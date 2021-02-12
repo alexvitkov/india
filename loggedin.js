@@ -72,11 +72,6 @@ function done_upload(fileview) {
 }
 
 function load_dir() {
-    var data = new FormData();
-
-    var path = "/";
-    for (const d of pwd)
-        path += d + "/";
 
     while (the_path.children.length > 1)
         the_path.removeChild(the_path.lastChild);
@@ -100,7 +95,8 @@ function load_dir() {
         }
     }
 
-    data.append('path', path);
+    var data = new FormData();
+    data.append('path', get_path());
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/readdir.php', true);
@@ -113,6 +109,39 @@ function load_dir() {
         for (const f of json) {
             add_file_visuals(f.name, f.is_directory, f.mimetype);
         }
+    };
+    xhr.send(data);
+}
+
+function delete_file(filename) {
+    var file_full_path = get_path() + filename;
+
+    var data = new FormData();
+    data.append('path', file_full_path);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/php/delete.php', true);
+    xhr.onload = function () {
+        load_dir();
+    };
+    xhr.send(data);
+}
+
+function rename_file(filename) {
+    var file_full_path = get_path() + filename;
+
+    var new_name = prompt(`Rename ${filename} to`, filename);
+    if (!new_name)
+        return;
+
+    var data = new FormData();
+    data.append('path', file_full_path);
+    data.append('new_name', new_name);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/php/rename.php', true);
+    xhr.onload = function () {
+        load_dir();
     };
     xhr.send(data);
 }
@@ -143,9 +172,9 @@ function add_file_visuals(name, is_directory, mimetype) {
                     alert('not implemented');
                 }
             }],
-            ['Rename', () => {alert('not implemented')}],
+            ['Rename', () => { rename_file(name); }],
             ['Share',  () => {alert('not implemented')}],
-            ['Delete', () => {alert('not implemented')}],
+            ['Delete', () => { delete_file(name); }],
         ]);
         e.preventDefault();
     }
@@ -190,6 +219,13 @@ function context(e, entries) {
     }
 
     document.body.appendChild(context_menu);
+}
+
+function get_path() {
+    var path = "/";
+    for (const d of pwd)
+        path += d + "/";
+    return path;
 }
 
 document.body.onclick = () => {
