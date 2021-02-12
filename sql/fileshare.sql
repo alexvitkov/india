@@ -1,6 +1,6 @@
 /*BEWARE!*/
-drop table if exists nodes;
 drop table if exists users;
+drop table if exists nodes;
 drop table if exists node_access;
 drop table if exists node_links;
 

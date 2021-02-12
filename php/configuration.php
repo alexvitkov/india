@@ -18,7 +18,7 @@ $database_username="outsider";
 $database_password="parola123";
 $database_location="localhost";
 
-    $storage_root = "/tmp";
+    $storage_root = "/srv/apache/testing/project/files/";
 }
 
 
