@@ -74,18 +74,6 @@ require_once "node.php";
 				return false;
 			}
 		}
-		function get_home_id($user_id)
-		{
-			$statement=$this->pdo->prepare("select home_directory
-							from users
-							where user_id=:id
-							");
-			$statement->bindParam(':id',$user_id);
-
-			$ret=$statement->execute(PDO::FETCH_ASSOC);
-			return $ret["home_directory"];
-		}
-
 
 		/*returns assoc array*/
 		function get_nodes_with_name($name)
