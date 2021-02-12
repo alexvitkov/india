@@ -146,6 +146,23 @@ function rename_file(filename) {
     xhr.send(data);
 }
 
+function new_folder() {
+    var dirname = prompt(`Directory name`, "New Folder");
+    if (!dirname)
+        return;
+
+    var data = new FormData();
+    data.append('parent_directory', get_path());
+    data.append('dirname', dirname);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/php/mkdir.php', true);
+    xhr.onload = function () {
+        load_dir();
+    };
+    xhr.send(data);
+}
+
 function add_file_visuals(name, is_directory, mimetype) {
     var fileDiv = document.createElement('div');
 
