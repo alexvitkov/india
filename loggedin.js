@@ -216,9 +216,9 @@ function add_file_visuals(fileview) {
                     alert('not implemented');
                 }
             }],
-            ['Rename', () => { rename_file(name); }],
+            ['Rename', () => { rename_file(fileview.filename); }],
             ['Share',  () => {alert('not implemented')}],
-            ['Delete', () => { delete_file(name); }],
+            ['Delete', () => { delete_file(fileview.filename); }],
         ]);
         e.preventDefault();
     }
