@@ -306,7 +306,7 @@ require_once "node.php";
 			}
 		}
 		/*returns the file name as it must be in the filesystem relative to the storage root*/
-		function create_file_node(string $filename,string $note,int $dir_id,User $user): string
+		function create_file_node(string $filename,string $note,int $dir_id,string $mimetype,User $user): string
 		{
 			global $storage_root;
 			/*checkout the directory*/

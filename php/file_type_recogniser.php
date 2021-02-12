@@ -2,7 +2,7 @@
 
 function file_type($path_to_file) {
 	$file_type_database = new finfo(FILEINFO_SYMLINK|FILEINFO_MIME_TYPE);
-	return $file_type_database->file($path_to_file);
+		return $file_type_database->file($path_to_file);
 }
 
 
