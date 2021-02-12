@@ -17,8 +17,8 @@ $database_name="fileup_testing";
 $database_username="outsider";
 $database_password="parola123";
 $database_location="localhost";
-
-    $storage_root = "/srv/apache/testing/project/files/";
+/*storage root must be in the webroot*/
+$storage_root = "/srv/apache/testing/project/files/";
 }
 
 

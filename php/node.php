@@ -14,7 +14,8 @@ require_once "database.php";
 			$this->node_id=$node_id;
 		}
 	}
-	class Current_Directory
+	
+	class Current_Directory extends Node
 	{
 		/*an array of the dir_ids taken to reach here*/
 		public $path;
