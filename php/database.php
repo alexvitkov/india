@@ -306,7 +306,7 @@ require_once "node.php";
 			}
 		}
 		/*returns the file name as it must be in the filesystem relative to the storage root*/
-		function create_file_node(string $filename,string $note,int $dir_id,User $user): string
+		function create_file_node(string $filename,string $note,int $dir_id,string $mimetype,User $user): string
 		{
 			global $storage_root;
 			/*checkout the directory*/
@@ -347,11 +347,12 @@ require_once "node.php";
 			/*generate the node*/
 			$code=$this->get_random_node_name("");
 			if($filename==NULL)return "error";
-			$prep=$this->pdo->prepare("insert into nodes(is_directory,relative_path,code)
-						   values(false,:root,:code)
+			$prep=$this->pdo->prepare("insert into nodes(is_directory,relative_path,code,type)
+						   values(false,:root,:code,:type)
 						   ");
 			$prep->bindParam(':root',$code);
 			$prep->bindParam(':code',$code);
+			$prep->bindParam(':type',$mimetype);
 
 			if($prep->execute()==false)
 			{
