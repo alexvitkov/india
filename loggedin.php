@@ -1,9 +1,14 @@
 <div>
     <div class="filesystem">
-        <h2 style="display: flex; gap: 1rem;">
-            <div class="path">
-                <a class="pathentry" href="#"> <?php echo $_SESSION['username'] ?>'s files/</a><a class="pathentry" href="#">foo/</a><a class="pathentry" href="#">bar</a></div>
-            <input id="upload_btn" type="button" value="Upload" onclick="begin_upload()">
+        <h2 style="display: flex; gap: 0rem;">
+            <button id="upload_btn" onclick="begin_upload()">Upload</button>
+            <div class="separator"></div>
+            <button id="upload_btn" onclick="begin_upload()">New Folder</button>
+            <div class="separator"></div>
+            <div class="path" id="the_path">
+                <!-- <a class="pathentry" href="#"> /</a><a class="pathentry" href="#">foo/</a><a class="pathentry" href="#">bar</a> -->
+                <button class="pathentry" onclick="pwd.length = 0; load_dir();"><?php echo $_SESSION['username'] ?>'s files</button>
+            </div>
         </h2>
 
         <div class="files" id="current_directory">
@@ -16,5 +21,6 @@
     <input id="filename" name="filename">
     <input type="file" name="the_file" id="the_file">
 </form>
+
 
 <script src="loggedin.js"></script>

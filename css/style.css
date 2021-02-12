@@ -6,7 +6,7 @@ html, body {
 body {
 	background: #f0f0f0;
 	color: black;
-	font-family: sans-serif;
+	font-family: Roboto, sans-serif;
 	overflow: hidden;
 }
 
@@ -96,11 +96,10 @@ body {
 }
 
 form {
-	background: white;
+	background: #fbfbfb;
 	margin: 4.5rem;
 	padding-top: 0;
 	box-shadow: 0 0.8rem 1.3rem rgba(0,0,0,0.2);
-	border-radius: 0.5rem;
 	border-radius: 0.5rem;
 	border: 1px solid #b9b9b9;
 }
@@ -170,20 +169,19 @@ form p {
 	min-width: 300px;
 }
 
-input:not([type=file]) {
+button,
+input:not([type=file]) 
+{
 	border: 1px solid #bbb;
-	padding: 0.8rem 2rem 0.5rem 2rem;
+	padding: 0.5rem 0.8rem;
 	font-size: inherit;
 	font-family: inherit;
 	border-radius: 0.3rem;
-	background: #f6f6f6;
+	background: #fcfcfc;
 }
 
 input[type=button], button, input[type=submit] {
 	cursor: pointer;
-}
-input[type=button]:hover, button:hover, input[type=submit]:hover {
-    background: white;
 }
 
 input[type=submit] {
@@ -198,9 +196,11 @@ input[type=submit] {
 	outline: none;
 }
 
-input:focus,
-input:hover {
-	background: white;
+
+input:hover,
+button:hover 
+{
+    background: white;
 }
 
 input:focus {
@@ -240,7 +240,6 @@ input[type=submit]:hover {
 	padding: 0;
 	box-shadow: 0 0.8rem 1.3rem rgba(0,0,0,0.2);
 	border-radius: 0.5rem;
-	border-radius: 0.5rem;
 	border: 1px solid #b9b9b9;
 
     display: block;
@@ -250,7 +249,7 @@ input[type=submit]:hover {
     padding: 1rem;
     display: grid;
 
-    grid-gap: 20px;
+    grid-gap: 0rem;
     grid-auto-rows: 10rem;
     grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
 }
@@ -277,25 +276,86 @@ input[type=submit]:hover {
     border-color: #ddd;
 }
 
+.file > img {
+    flex: 1 0 0;
+}
+
 .file:hover > img {
-    filter: brightness(150%);
-}
-
-.path {
-    font-size: 1.5rem;
-}
-
-.path > a {
-    color: #333;
-    text-decoration: none;
-}
-
-.path > a:hover {
-    text-decoration: underline;
+    filter: brightness(120%);
 }
 
 .filesystem > h2 {
     display: flex;
-    align-items: baseline;
+    align-items: stretch;
     font-weight: normal;
+    padding: 0rem;
+    border-bottom: 1px solid #bbb;
+
+}
+
+.filesystem > h2 button {
+    border: none;
+    padding: 0.3rem 1.1rem;
+    background: inherit;
+    border-radius: 0;
+}
+
+.filesystem > h2 button:not(.pathentry):hover {
+    background: white;
+}
+
+.filesystem > h2 > .separator {
+    flex: 0 0 1px;
+    align-self: stretch;
+    background: #bbb;
+}
+
+.filesystem > h2 > *:first-child {
+	border-top-left-radius: 0.5rem;
+}
+
+.path {
+    display: flex;
+    align-items: stretch;
+    font-size: 0.8em;
+}
+
+.path > .separator {
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    padding: 0 0.2rem;
+    align-self: center;
+}
+
+.pathentry:hover {
+    text-decoration: underline;
+}
+
+.context {
+    background: white;
+    position: absolute;
+    z-index: 1000;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    top: 0;
+    left: 0;
+
+    border: 1px solid #ccc;
+	box-shadow: 0 0.3rem 0.5rem rgba(0,0,0,0.2);
+}
+
+.context > li {
+    padding: 0.4rem 1.5rem;
+    margin: 0;
+
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+.context > li:hover {
+    background: #2e91db;
+    color: white;
 }
