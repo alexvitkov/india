@@ -105,7 +105,6 @@ function load_dir() {
             f.visuals.remove();
         files = [];
 
-	alert(this.responseText);
         var json = JSON.parse(this.responseText);
         for (const f of json) {
             add_file_visuals(f.name, f.is_directory, f.mimetype);
