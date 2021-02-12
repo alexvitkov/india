@@ -1,4 +1,3 @@
-
 <div>
     <div class="filesystem">
         <h2 style="display: flex; gap: 1rem;">
@@ -7,11 +6,7 @@
             <input id="upload_btn" type="button" value="Upload" onclick="begin_upload()">
         </h2>
 
-        <div class="files">
-            <div class="file"> 
-                <img src="/mimeicons/application-pdf.png">
-                <div class="filename">asdf</div>
-            </div>
+        <div class="files" id="current_directory">
         </div>
     </div>
 
