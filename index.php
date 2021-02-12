@@ -5,6 +5,8 @@
 <html>
     <head>
         <meta charset="utf-8">
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
         <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
         <title>shady file upload</title> <link rel="stylesheet" type="text/css" href="css/style.css"> 
     </head>

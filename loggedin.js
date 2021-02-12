@@ -1,4 +1,4 @@
-var FORM_ASYNC = false;
+var FORM_ASYNC = true;
 
 const upload_form    = document.getElementById("upload_form");
 const the_file       = document.getElementById("the_file");
@@ -22,6 +22,12 @@ class FileView {
     }
 }
 
+class PendingUpload {
+    constructor(fileview) {
+        this.fileview = fileview;
+    }
+}
+
 var files = [];
 
 function on_file_added(_e) {
@@ -33,13 +39,15 @@ function on_file_added(_e) {
             return;
         }
 
+        var fileview = add_file_visuals(filename_input.value, false, "pending");
+
         // Send the form asynchronously through the fetch api
         fetch(upload_form.action, {
             method: upload_form.method,
             body: new FormData(upload_form)
         }).then((resp) => {
             if (resp.status == 200) {
-                add_file_visuals(filename_input.value, true);
+                done_upload(fileview);
             }
             else {
                 alert("Upload failed");
@@ -47,13 +55,19 @@ function on_file_added(_e) {
         }, () => {
             alert("Upload failed")
         });
-
-
+        
+        pending_uploads.push(fileview);
     }
     else {
         alert("No files selected");
     }
+}
 
+function done_upload(fileview) {
+    var index = pending_uploads.indexOf(fileview);
+    if (index >= 0)
+        pending_uploads.splice(index, 1);
+    load_dir(pwd);
 }
 
 function load_dir(pwd) {
@@ -91,6 +105,9 @@ function add_file_visuals(name, is_directory, mimetype) {
     fileDiv.classList.add('file');
     filename.classList.add('filename');
     filename.innerText = name;
+
+    if (mimetype == "pending")
+        fileDiv.classList.add('pending');
 
     fileDiv.appendChild(img);
     fileDiv.appendChild(filename);
