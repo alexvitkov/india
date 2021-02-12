@@ -26,7 +26,7 @@ require_once "node.php";
 		{
 			$ret=new User;
 
-			$prep=$this->pdo->prepare("select user_id,username,email from users where username=:username");
+			$prep=$this->pdo->prepare("select user_id,username,email,home_directory from users where username=:username");
 			$prep->bindParam(':username',$user);
 
 			$prep->execute();
@@ -106,12 +106,13 @@ require_once "node.php";
 				error_log("there was a problem with the sql statement at get_nodes_with_code");
 				return [];
 			}
-			return $statement->fetchAll(PDO::FETCH_ASSOC);
+			return $statement->fetch(PDO::FETCH_ASSOC);
 		}
 		/* I think this only makes sense if node is a dir*/
 		/* returns assoc array of nodes*/
 		function get_links_of(int $node_id)
 		{
+			error_log("in get_links_of with argument {$node_id}");
 			$statement=$this->pdo->prepare("
 							select node_links.node_id as id,
 								node_links.name as name,
@@ -121,7 +122,7 @@ require_once "node.php";
 								from node_links
 								inner join nodes on
 								nodes.node_id=node_links.node_id
-								where nodes.node_id=:id
+								where node_links.directory_id=:id
 							");
 			$statement->bindParam(':id',$node_id);
 			if($statement->execute()==false)
@@ -171,8 +172,93 @@ require_once "node.php";
 		}
 
 
+		function get_premissions(int $node_id,int $user_id)
+		{
+
+			$prep=$this->pdo->prepare("
+							select can_view,can_edit
+							from node_access
+							where node_id=:node and user_id=:user
+							");
+			$prep->bindParam(':node',$node_id);
+			$prep->bindParam(':user',$user_id);
+			if($prep->execute()==false)
+			{
+				error_log("there is an error with the sql statemtent at get_premissions");
+				return NULL;
+			}
+			$ret=$prep->fetch(PDO::FETCH_ASSOC);
+			if(gettype($ret)=="boolean")
+			{
+				$prep=$this->pdo->prepare("insert into 
+							node_access(node_id,user_id,can_view,can_edit)
+							values(:node,:user,false,false)");
+				$prep->bindParam(':node',$node_id);
+				$prep->bindParam(':user',$user_id);
+				if($prep->execute()==false)
+				{
+					error_log("couldnt create access entry in get_premissions2");
+					return NULL;
+				}
 
 
+
+				$prep=$this->pdo->prepare("
+								select can_view,can_edit
+								from node_access
+								where node_id=:node and user_id=:user
+								");
+				$prep->bindParam(':node',$node_id);
+				$prep->bindParam(':user',$user_id);
+				if($prep->execute()==false)
+				{
+					error_log("there is an error with the sql statemtent at get_premissions3");
+					return NULL;
+				}
+				$ret=$prep->fetch(PDO::FETCH_ASSOC);
+			}
+			return $ret;
+		}
+
+		function give_view_access(int $node_id,int $user_id)
+		{
+			$premissions=$this->get_premissions($node_id,$user_id);
+			/*this isn't futile because we create access entries in get_premission if there are none*/
+			if($premissions["can_view"]==false)
+			{
+				$prep=$this->pdo->prepare("update node_access 
+								set can_view=true
+								where node_id=:node and user_id=:user
+								");
+				$prep->bindParam(':node',$node_id);
+				$prep->bindParam(':user',$user_id);
+				if($prep->execute()==false)
+				{
+					error_log("could not execute sql statement in guve_view_access");
+				}
+
+			}
+		}
+
+		function give_edit_access(int $node_id,int $user_id)
+		{
+			$premissions=$this->get_premissions($node_id,$user_id);
+			/*this isn't futile because we create access entries in get_premission if there are none*/
+			if($premissions["can_edit"]==false)
+			{
+				$prep=$this->pdo->prepare("update node_access 
+								set can_edit=true
+								where node_id=:node and user_id=:user
+								");
+				$prep->bindParam(':node',$node_id);
+				$prep->bindParam(':user',$user_id);
+				if($prep->execute()==false)
+				{
+					error_log("could not execute sql statement in give_edit_access");
+				}
+
+			}
+		}
 
 		/*this is used to create seperate roots for the users*/
 		function create_dangling_directory(): int
@@ -180,15 +266,17 @@ require_once "node.php";
 			$code_name=$this->get_random_node_name("");
 			global $storage_root;
 
+			/*create directory node*/
 			$prep=$this->pdo->prepare("insert into nodes(is_directory,relative_path,code) values(true,:root,:code)");
 			$prep->bindParam(':code',$code_name);
-			$prep->bindParam(':root',$storage_root);
+			$prep->bindParam(':root',$code_name);
 			if($prep->execute()==false)
 			{
 				error_log("tried to create a dangling directory but sql statement failed. Fatal error!");
 				exit(1);
 			}
-			
+			/*give premissions*/
+
 			$id=$this->get_node_with_code($code_name);
 			if(count($id)!=1)
 			{
@@ -197,7 +285,7 @@ require_once "node.php";
 			}
 
 			//print count($id);
-			return $id[0]["id"];
+			return $id["id"];
 		}
 
 		/*links source to target*/
@@ -217,7 +305,7 @@ require_once "node.php";
 			}
 		}
 		/*returns the file name as it must be in the filesystem relative to the storage root*/
-		function create_file_node(string $filename,string $note,int $dir_id): string
+		function create_file_node(string $filename,string $note,int $dir_id,User $user): string
 		{
 			global $storage_root;
 			/*checkout the directory*/
@@ -236,14 +324,22 @@ require_once "node.php";
 				error_log("could not exedude dir sql statement in create_file_node");
 				return "error";
 			}
-			$dir=$dir_prep->fetch(PDO::FETCH_ASSOC);
+			if(($dir=$dir_prep->fetch(PDO::FETCH_ASSOC))==false)
+			{
+				error_log("create_file_node dir isnt a directory");
+				return "error";
+			}
 			if($dir["is_directory"]==false)
 			{
+				/*remove this TODO*/
+				error_log("create_file_node: dir is not a directory directory=".print_r($dir).gettype($dir));
 				return "error";
 			}
 			if($dir["can_edit"]==false)
 			{
 				/*TODO*/
+				/*remove this TODO*/
+				error_log("create_file_node: dir is not modifiable");
 				return "error";
 			}
 
@@ -253,7 +349,7 @@ require_once "node.php";
 			$prep=$this->pdo->prepare("insert into nodes(is_directory,relative_path,code)
 						   values(false,:root,:code)
 						   ");
-			$prep->bindParam(':root',"/".$code);
+			$prep->bindParam(':root',$code);
 			$prep->bindParam(':code',$code);
 
 			if($prep->execute()==false)
@@ -262,9 +358,13 @@ require_once "node.php";
 				/*not so quiet error*/
 				return "error";
 			}
-			$new_id=get_node_with_code($code);
+			$new_id=$this->get_node_with_code($code)["id"];
 			/*link the node to the directory*/
-			link_nodes($dir_id,$new_id,$filename,$note);
+			$this->link_nodes($dir_id,$new_id,$filename,$note);
+			/*give premissions to the creator*/
+
+			$this->give_view_access($new_id,$user->user_id);
+			$this->give_edit_access($new_id,$user->user_id);
 			return $code;
 		}
 		/*checks if there is a link between two node_id-s*/
@@ -323,6 +423,9 @@ require_once "node.php";
 						/*todo make an error page*/
 						exit(1);
 					}
+					$user_id=$this->get_user($user)->user_id;
+					$this->give_view_access($home_dir,$user_id);
+					$this->give_edit_access($home_dir,$user_id);
 				}
 				return true;
 			}
