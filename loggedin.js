@@ -3,14 +3,13 @@ var FORM_ASYNC = true;
 const upload_form    = document.getElementById("upload_form");
 const the_file       = document.getElementById("the_file");
 const filename_input = document.getElementById("filename");
-const upload_btn     = document.getElementById("upload_btn");
-const the_path       = document.getElementById("the_path");
-const current_directory = document.getElementById("current_directory");
+const current_directory       = document.getElementById("current_directory");
 const upload_parent_directory = document.getElementById("upload_parent_directory");
 
 the_file.onchange = on_file_added;
 
-var pwd = [];
+var windows = [];
+var focus = null;
 
 var context_menu = null;
 var dragging = null;
@@ -51,7 +50,7 @@ function on_file_added(_e) {
             body: new FormData(upload_form)
         }).then((resp) => {
             if (resp.status == 200) {
-                load_dir();
+                openfile(true);
             } else {
                 alert("Upload failed");
             }
@@ -64,17 +63,24 @@ function on_file_added(_e) {
     }
 }
 
-function load_dir() {
-    while (the_path.children.length > 1)
+function update_path_visuals() {
+    var the_path = focus.visuals.getElementsByClassName('path')[0];
+
+    while (the_path.children.length > 0)
         the_path.removeChild(the_path.lastChild);
 
-    for (let i = 0; i < pwd.length; i++) {
-        var d = pwd[i];
+    for (let i = -1; i < focus.pwd.length; i++) {
+        var d;
+        if (i >= 0) {
+            d = focus.pwd[i];
+            var separator_div = document.createElement('div');
+            separator_div.classList.add('separator');
+            the_path.appendChild(separator_div);
+            separator_div.innerText = "»";
+        }
+        else
+            d = "Root";
 
-        var separator_div = document.createElement('div');
-        separator_div.classList.add('separator');
-        the_path.appendChild(separator_div);
-        separator_div.innerText = "»";
 
         var entry = document.createElement('button');
         entry.classList.add('pathentry');
@@ -83,6 +89,34 @@ function load_dir() {
 
         add_link_functionality(entry, i + 1);
     }
+}
+
+function openfile_nondir() {
+    var data = new FormData();
+    data.append('folder', get_path(focus.pwd.length - 1));
+    data.append('filename', focus.pwd[focus.pwd.length - 1]);
+
+    var xhr = new XMLHttpRequest();
+
+    focus.pwd.push();
+
+    update_path_visuals();
+
+    xhr.open('POST', '/php/readfile.php', true);
+
+    focus.filecontents.innerText = "Loading...";
+    focus.filecontents.style.display = 'block';
+    focus.foldercontents.style.display = 'none';
+
+    xhr.onload = function () {
+        focus.filecontents.innerText = xhr.responseText;
+    };
+    xhr.send(data);
+}
+
+function opendir() {
+
+    update_path_visuals();
 
     var data = new FormData();
     data.append('path', get_path());
@@ -117,6 +151,17 @@ function load_dir() {
 
     };
     xhr.send(data);
+
+    focus.filecontents.style.display   = 'none';
+    focus.foldercontents.style.display = 'block';
+}
+
+function openfile(is_directory) {
+    if (is_directory) {
+        opendir();
+    } else {
+        openfile_nondir();
+    }
 }
 
 function delete_file(filename) {
@@ -128,7 +173,7 @@ function delete_file(filename) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/delete.php', true);
     xhr.onload = function () {
-        load_dir();
+        openfile(true);
     };
     xhr.send(data);
 }
@@ -146,7 +191,7 @@ function rename_file(filename) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/rename.php', true);
     xhr.onload = function () {
-        load_dir();
+        openfile(true);
     };
     xhr.send(data);
 }
@@ -160,13 +205,12 @@ function move_file(new_folder, filename) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/move.php', true);
     xhr.onload = function () {
-        load_dir();
+        openfile(true);
     };
     xhr.send(data);
 }
 
-function new_folder() {
-    var dirname = prompt(`Directory name`, "New Folder");
+function new_folder() { var dirname = prompt(`Directory name`, "New Folder");
     if (!dirname)
         return;
 
@@ -177,44 +221,64 @@ function new_folder() {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/mkdir.php', true);
     xhr.onload = function () {
-        load_dir();
+        openfile(true);
     };
     xhr.send(data);
 }
 
-function begin_drag(e, fileview) {
+function begin_drag_fileview(e, fileview) {
     if (dragging)
         end_drag();
 
     dragging_placeholder = document.createElement('div');
-    fileview.visuals.parentNode.insertBefore(dragging_placeholder, fileview.visuals);
+    dragging_fileview = fileview;
 
     dragging = fileview.visuals;
-    dragging_fileview = fileview;
+
+    // document.body.appendChild(dragging);
+
+    begin_drag(e, fileview.visuals,);
+}
+
+function begin_drag(e, obj) {
+
+    dragging = obj;
     dragging.classList.add("dragged");
 
     var elemRect = dragging.getBoundingClientRect();
+    dragging_offset_x = e.clientX - elemRect.left;
+    dragging_offset_y = -e.clientY + elemRect.top;
+    
 
-    dragging_offset_x = elemRect.width - (elemRect.left - e.clientX);
-    dragging_offset_y = elemRect.top  - e.clientY;
-
-    dragging.style.position = "absolute";
-    dragging.style.width  = elemRect.width  + "px";
-    dragging.style.height = elemRect.height + "px";
-    document.body.appendChild(dragging);
+    if (dragging_placeholder)
+        obj.parentNode.insertBefore(dragging_placeholder, obj);
 
     dragging.style.left = (e.clientX - dragging_offset_x) + "px";
     dragging.style.top  = (e.clientY + dragging_offset_y) + "px";
+
+    dragging.style.width  = elemRect.width  + "px";
+    dragging.style.height = elemRect.height + "px";
+
+    dragging.style.position = "absolute";
+    document.body.appendChild(dragging);
 }
 
-function end_drag(e) {
-    dragging_placeholder.parentNode.insertBefore(dragging, dragging_placeholder);
-    dragging_placeholder.remove();
-    dragging.style.removeProperty("position");
-    dragging.style.removeProperty("width");
-    dragging.style.removeProperty("height");
-    dragging.style.removeProperty("left");
-    dragging.style.removeProperty("top");
+function end_drag(_e) {
+    if (dragging_placeholder) {
+        dragging_placeholder.parentNode.insertBefore(dragging, dragging_placeholder);
+        dragging_placeholder.remove();
+        dragging_placeholder = null;
+    }
+
+    if (dragging_fileview) {
+        dragging.style.removeProperty("position");
+        dragging.style.removeProperty("width");
+        dragging.style.removeProperty("height");
+        dragging.style.removeProperty("left");
+        dragging.style.removeProperty("top");
+        dragging_fileview = null;
+    }
+
     dragging.classList.remove("dragged");
     dragging = null;
 }
@@ -229,12 +293,12 @@ function drop_handler(dst, src) {
 
 function add_link_functionality(link, length) {
     link.onclick = () => {
-        pwd.length = length,
-        load_dir();
+        focus.pwd.length = length,
+        openfile(true);
     }
 
     link.onmouseup = (e) => {
-        if (dragging) {
+        if (dragging && dragging_fileview) {
             var new_folder = get_path(length);
             move_file(new_folder, dragging_fileview.filename);
             end_drag();
@@ -245,20 +309,81 @@ function add_link_functionality(link, length) {
     }
 }
 
-add_link_functionality(document.getElementById("home_path_entry"), 0);
-
-function open_file(fileview) {
-    var data = new FormData();
-    data.append('folder', get_path());
-    data.append('filename', fileview.filename);
-
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', '/php/readfile.php', true);
-    xhr.onload = function () {
-        console.log(xhr.responseText);
-    };
-    xhr.send(data);
+class Window {
+    constructor(pwd) {
+        this.pwd = pwd;
+    }
 }
+
+
+function make_window(pwd) {
+    var wnd = new Window(pwd);
+    windows.push(wnd);
+
+    var wnd_html = document.createElement('div');
+    wnd_html.classList.add('window');
+
+    var h2 = document.createElement('h2');
+    wnd_html.appendChild(h2);
+
+    h2.onmousedown = (e) => {
+        begin_drag(e, wnd_html);
+        e.preventDefault();
+    };
+
+    path = document.createElement('div');
+    path.classList.add('path');
+    h2.appendChild(path);
+
+    wnd_html.style.width    = "800px";
+    wnd_html.style.height   = "600px";
+    wnd_html.style.position = "absolute";
+    wnd_html.style.left     = "300px";
+    wnd_html.style.top      = "300px";
+
+    wnd.visuals = wnd_html;
+
+    {
+        wnd.foldercontents = document.createElement('div');
+        wnd.foldercontents.classList.add('foldercontents');
+        wnd_html.appendChild(wnd.foldercontents);
+
+        var h3 = document.createElement('h3');
+        wnd.foldercontents.appendChild(h3);
+
+        var upload_btn = document.createElement('button');
+        upload_btn.innerText = "Upload";
+        upload_btn.onclick = () => { begin_upload(); }
+        h3.appendChild(upload_btn);
+
+        var separator = document.createElement('div');
+        separator.classList.add('separator');
+        h3.appendChild(separator);
+
+        var new_folder_btn = document.createElement('button');
+        new_folder_btn.innerText = "New Folder";
+        new_folder_btn.onclick = () => { new_folder(); }
+        h3.appendChild(new_folder_btn);
+
+        separator = document.createElement('div');
+        separator.classList.add('separator');
+        h3.appendChild(separator);
+
+        wnd.filegrid = document.createElement('div');
+        wnd.filegrid.classList.add('files');
+        wnd.foldercontents.appendChild(wnd.filegrid);
+    }
+
+    {
+        wnd.filecontents = document.createElement('div');
+        wnd.filecontents.classList.add('filecontents');
+        wnd_html.appendChild(wnd.filecontents);
+    }
+
+    document.body.appendChild(wnd_html);
+    return wnd;
+}
+
 
 function add_file_visuals(fileview) {
     var visuals = document.createElement('div');
@@ -268,29 +393,27 @@ function add_file_visuals(fileview) {
     var filename = document.createElement('div');
 
     if (fileview.is_directory) {
-        img.src="/mimeicons/directory.png";
-        visuals.onclick = () => {
-            pwd.push(fileview.filename);
-            load_dir();
-        }
+        if (fileview.filename == "trash")
+            img.src="/mimeicons/user-trash.png";
+        else
+            img.src="/mimeicons/directory.png";
     } else {
         img.src=`/mimeicons/${fileview.mimetype.replace("/", "-")}.png`;
-        visuals.onclick = () => {
-            open_file(fileview);
-        }
+    }
+
+    visuals.onclick = () => {
+        focus.pwd.push(fileview.filename);
+        openfile(fileview.is_directory);
     }
 
     visuals.oncontextmenu = (e) => {
         if (!dragging) {
             context(e, [
                 ['Open', () => {
-                    if (fileview.is_directory) { 
-                        pwd.push(fileview.filename);
-                        load_dir();
-                    } else {
-                        open_file(fileview);
-                    }
+                    focus.pwd.push(fileview.filename);
+                    openfile(fileview.is_directory);
                 }],
+                ['Open in New Window', () => {alert('not implemented')}],
                 ['Rename', () => { rename_file(fileview.filename); }],
                 ['Share',  () => {alert('not implemented')}],
                 ['Delete', () => { delete_file(fileview.filename); }],
@@ -301,7 +424,7 @@ function add_file_visuals(fileview) {
     }
 
     visuals.ondragstart = (e) => {
-        begin_drag(e, fileview);
+        begin_drag_fileview(e, fileview);
         e.preventDefault();
     };
 
@@ -323,7 +446,7 @@ function add_file_visuals(fileview) {
     visuals.appendChild(img);
     visuals.appendChild(filename);
 
-    current_directory.appendChild(visuals);
+    focus.filegrid.appendChild(visuals);
 }
 
 function begin_upload() {
@@ -352,12 +475,12 @@ function context(e, entries) {
 
 function get_path(max_length) {
     if (max_length == undefined) {
-        max_length = pwd.length;
+        max_length = focus.pwd.length;
     }
 
     var path = "/";
     for (let i = 0; i < max_length; i++) {
-        path += pwd[i];
+        path += focus.pwd[i];
         if (i != max_length - 1)
             path += "/";
     }
@@ -384,7 +507,7 @@ document.body.onmousemove = (e) => {
     }
 }
 
-document.body.onmouseup = (e) => {
+document.body.onmouseup = (_e) => {
     if (dragging)
         end_drag();
 }
@@ -398,4 +521,7 @@ document.body.oncontextmenu = (e) => {
         context_menu.remove();
 }
 
-load_dir();
+
+var root_window = make_window([]);
+focus = root_window;
+openfile(true);

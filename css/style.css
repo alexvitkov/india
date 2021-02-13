@@ -14,6 +14,10 @@ body {
 	display: flex;
 	flex: 1 0 0;
 	align-items: stretch;
+
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
 
 #page > * {
@@ -141,7 +145,6 @@ form > .content {
 	justify-content: center;
 }
 
-.filesystem > h2,
 form > h2 {
 	color: #4d4d4d;
 	margin: 0;
@@ -152,10 +155,32 @@ form > h2 {
 	border-top-right-radius: 0.5rem;
 }
 
+
+.window h3 button,
+.window > h2 button 
+{
+    border: none;
+    padding: 0.3rem 1rem;
+    background: inherit;
+    border-radius: 0;
+}
+
+.window h3 button:not(.pathentry):hover {
+    background: white;
+}
+
+.window h3 > .separator {
+    flex: 0 0 1px;
+    align-self: stretch;
+    background: #bbb;
+}
+
+.window > h2 > *:first-child {
+	border-top-left-radius: 0.5rem;
+}
 form p {
 	margin: 1rem 0px 0.3rem 0px;
 }
-
 
 .hero_form_error {
 	animation: fadein 0.2s;
@@ -241,15 +266,62 @@ input[type=submit]:hover {
     display: none;
 }
 
-.filesystem {
-	background: #fafafa;
-	margin: 1rem;
+.window {
+	margin: 0rem;
 	padding: 0;
 	box-shadow: 0 0.8rem 1.3rem rgba(0,0,0,0.2);
 	border-radius: 0.5rem;
 	border: 1px solid #b9b9b9;
 
     display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 800px;
+    height: 600px;
+    
+    transition: opacity 0.3s;
+    display: flex;
+    flex-direction: column;
+}
+
+.foldercontents, .filecontents {
+	background: rgba(250, 250, 250, .8);
+    flex: 1 0 0;
+}
+
+.filecontents {
+    padding: 0.8rem;
+    font-size: 1.1rem;
+}
+
+.window h3,
+.window > h2 {
+	color: #4d4d4d;
+	background: #f0f0f0;
+	margin: 0;
+
+
+    display: flex;
+    align-items: stretch;
+    font-weight: normal;
+    padding: 0rem;
+    border-bottom: 1px solid #bbb;
+}
+
+.window > h2 {
+    font-size: 1.3rem;
+	border-top-left-radius: 0.5rem;
+	border-top-right-radius: 0.5rem;
+    cursor: grab;
+}
+
+.window h3 {
+    font-size: 1.2rem;
+}
+
+.window.dragged {
+    /* opacity: 0.9; */
 }
 
 .files {
@@ -272,7 +344,7 @@ input[type=submit]:hover {
     display: flex;
     flex-direction: column;
     align-items: center;
-    border: 1px solid #fafafa;
+    border: 1px solid rgba(0,0,0,0);
     border-radius: 0.1rem;
 }
 
@@ -282,7 +354,7 @@ input[type=submit]:hover {
 }
 
 .file:hover:not(.dragged) {
-    background: white;
+    background: rgba(255,255,255, 0.5);
     color: black;
     border-color: #ddd;
 }
@@ -297,40 +369,9 @@ input[type=submit]:hover {
     filter: brightness(120%);
 }
 
-.filesystem > h2 {
-    display: flex;
-    align-items: stretch;
-    font-weight: normal;
-    padding: 0rem;
-    border-bottom: 1px solid #bbb;
-    font-size: 1.3rem;
-}
-
-.filesystem > h2 button {
-    border: none;
-    padding: 0.3rem 1rem;
-    background: inherit;
-    border-radius: 0;
-}
-
-.filesystem > h2 button:not(.pathentry):hover {
-    background: white;
-}
-
-.filesystem > h2 > .separator {
-    flex: 0 0 1px;
-    align-self: stretch;
-    background: #bbb;
-}
-
-.filesystem > h2 > *:first-child {
-	border-top-left-radius: 0.5rem;
-}
-
 .path {
     display: flex;
     align-items: stretch;
-    font-size: 0.8em;
 }
 
 .path > .separator {
@@ -371,4 +412,16 @@ input[type=submit]:hover {
 .context > li:hover {
     background: #2e91db;
     color: white;
+}
+
+.backdrop {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    background-image: url("/img/backdrop.jpg");
+    background-size: cover;
 }
