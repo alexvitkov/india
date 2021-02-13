@@ -310,7 +310,7 @@ require_once "node.php";
 					return;
 				}
 			}
-			unlink($storage_root,"/".$location);
+			unlink($storage_root."/".$location);
 
 			if($location==NULL)
 			{
@@ -378,6 +378,7 @@ require_once "node.php";
 
 		function unlink_nodes(int $dir_id, string $filename)
 		{
+			global $storage_root;
 			/*TODO delet this*/
 			error_log("in unlink nodes");
 			$prep=$this->pdo->prepare("delete from node_links
@@ -419,7 +420,8 @@ require_once "node.php";
 			$res=$prep->fetchAll(PDO::FETCH_ASSOC);
 			foreach($res as $node)
 			{
-				unlink($storage_root,"/".$node["code"]);
+				unlink($storage_root."/".$node["code"]);
+				error_log("deleting: ".$storage_root."/".$node["code"]);
 			}
 			$prep=$this->pdo->prepare("delete from nodes where node_id in
 								(select node_id from super_trash)");
