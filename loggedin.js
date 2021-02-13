@@ -13,6 +13,10 @@ var focus = null;
 
 var context_menu = null;
 var dragging = null;
+
+var dragging_candidate = null;
+var dragging_candidate_x, dragging_candidate_y;
+
 var dragging_fileview;
 var dragging_placeholder = null;
 var dragging_offset_x = 0, dragging_offset_y = 0;
@@ -366,14 +370,13 @@ function begin_drag_fileview(e, fileview) {
 }
 
 function begin_drag(e, obj) {
-
     dragging = obj;
+    dragging_candidate = null;
     dragging.classList.add("dragged");
 
     var elemRect = dragging.getBoundingClientRect();
     dragging_offset_x = e.clientX - elemRect.left;
     dragging_offset_y = -e.clientY + elemRect.top;
-
 
     if (dragging_placeholder)
         obj.parentNode.insertBefore(dragging_placeholder, obj);
@@ -455,10 +458,14 @@ function make_window(pwd) {
     var h2 = document.createElement('h2');
     wnd_html.appendChild(h2);
 
-    //h2.onmousedown = (e) => {
-    //begin_drag(e, wnd_html);
-    // e.preventDefault();
-    //};
+    h2.onmousedown = (e) => {
+        // begin_drag(e, wnd_html);
+        if (!dragging) {
+            dragging_candidate = wnd_html;
+            dragging_candidate_x = e.clientX;
+            dragging_candidate_y = e.clientY;
+        }
+    };
 
     path = document.createElement('div');
     path.classList.add('path');
@@ -684,9 +691,16 @@ document.body.onmousemove = (e) => {
         dragging.style.left = (e.clientX - dragging_offset_x) + "px";
         dragging.style.top  = (e.clientY + dragging_offset_y) + "px";
     }
+    else if (dragging_candidate) {
+        var d = Math.abs(e.clientX - dragging_candidate_x) + Math.abs(e.clientY - dragging_candidate_y);
+        if (d > 15)
+            begin_drag(e, dragging_candidate);
+    }
 }
 
 document.body.onmouseup = (_e) => {
+    if (dragging_candidate)
+        dragging_candidate = null;
     if (dragging)
         end_drag();
 }

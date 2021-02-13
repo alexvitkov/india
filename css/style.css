@@ -267,6 +267,7 @@ input[type=submit]:hover {
 }
 
 .window {
+    box-sizing: border-box;
 	margin: 0rem;
 	padding: 0;
 	box-shadow: 0 0.8rem 1.3rem rgba(0,0,0,0.2);
@@ -338,6 +339,7 @@ input[type=submit]:hover {
 }
 
 .file {
+    box-sizing: border-box;
     padding: 0.5rem;
     cursor: pointer;
     color: #333;
