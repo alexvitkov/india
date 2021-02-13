@@ -84,15 +84,15 @@ require_once "node.php";
 					 where name=:name"
 					);
 			$statement->bindParam(':name',$name);
-			if($statement->execute()==NULL)
+			if($statement->execute()==false)
 			{
 				error_log("there was a problem with the sql statement at get_nodes_with_name");
-				return [];
+				return NULL;
 			}
 			return $statement->fetchAll(PDO::FETCH_ASSOC);
 		}
 
-		/*returns assoc array*/
+		/*returns id*/
 		function get_node_with_code($code)
 		{
 			$statement=$this->pdo->prepare(
@@ -101,12 +101,13 @@ require_once "node.php";
 					 where code=:code"
 					);
 			$statement->bindParam(':code',$code);
-			if($statement->execute()==NULL)
+			if($statement->execute()==false)
 			{
 				error_log("there was a problem with the sql statement at get_nodes_with_code");
-				return [];
+				return NULL;
 			}
-			return $statement->fetch(PDO::FETCH_ASSOC);
+			$ret= $statement->fetch(PDO::FETCH_ASSOC);
+			return $ret["id"];
 		}
 		/* I think this only makes sense if node is a dir*/
 		/* returns assoc array of nodes*/
@@ -347,7 +348,7 @@ require_once "node.php";
 			/*give premissions*/
 
 			$id=$this->get_node_with_code($code_name);
-			if(count($id)!=1)
+			if($id!=NULL)
 			{
 				error_log("created a dangling directory but couldn't find it afterward. Fatal error!");
 				exit(1);
@@ -451,6 +452,40 @@ require_once "node.php";
 			}
 
 		}
+		function create_shared_node(string $password,int $node_id):bool
+		{
+			$prep=$this->pdo->prepare("insert into shared_nodes(node_id,passcode)
+							values (:id,:pass)
+						");
+			$prep->bindParam(':id',$node_id);
+			$prep->bindParam(':pass',$password);
+			if($prep->execute()==false)
+			{
+				error_log("could not create shared node in create_shared_node");
+				return false;
+			}
+			return true;
+		}
+		function get_node(int $node_id)
+		{
+			$prep=$this->pdo->prepare("select * from nodes where node_id=:id");
+			$prep->bindParam(':id',$node_id);
+			if($prep->execute()==false)
+			{
+				error_log("sql statement at get_node failed");
+				return NULL;
+			}
+			$nod=$prep->fetch(PDO::FETCH_ASSOC);
+			$ret=new Node();
+			$ret->node_id=$nod["node_id"];
+			$ret->is_directory=$nod["is_directory"];
+			$ret->relative_path=$nod["relative_path"];
+			$ret->type=$nod["type"];
+			$ret->code=$nod["code"];
+
+			return $ret;
+
+		}
 		/*returns the file name as it must be in the filesystem relative to the storage root*/
 		function create_file_node(string $filename,string $note,int $dir_id,string $mimetype,User $user): string
 		{
@@ -470,9 +505,9 @@ require_once "node.php";
 			{
 				error_log("could not exedude dir sql statement in create_file_node");
 				return "error";
-            }
+		        }
 
-            $dir=$dir_prep->fetch(PDO::FETCH_ASSOC);
+			$dir=$dir_prep->fetch(PDO::FETCH_ASSOC);
 			if($dir == false)
 			{
 				error_log("create_file_node dir isnt a directory");
@@ -514,7 +549,7 @@ require_once "node.php";
 				/*not so quiet error*/
 				return "error";
 			}
-			$new_id=$this->get_node_with_code($code)["id"];
+			$new_id=$this->get_node_with_code($code);
 			/*link the node to the directory*/
 			$this->link_nodes($dir_id,$new_id,$filename,$note);
 			/*give premissions to the creator*/

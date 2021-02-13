@@ -40,5 +40,4 @@ if (!$file_node) {
 }
 
 header("Content-type: $file_node[mimetype]");
-
 readfile("$storage_root/$file_node[code]");

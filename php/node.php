@@ -2,7 +2,16 @@
 require_once "database.php";
 require_once "user.php";
 	
+	class Node
+	{
+		public $node_id;
+		public $is_directory;
+		public $relative_path;
+		public $type;
+		public $code;
+	}
 	/*path is in terms of the simulated filesystem*/
+	/*returns NULL on error*/
 	function get_directory(string $abstract_path,User $user)
 	{
 
@@ -60,6 +69,40 @@ require_once "user.php";
 		global $database;
 		$parent_dir_id=get_directory($abstract_path,$user);
 		$database->unlink_nodes($parent_dir_id,$filename);
+	}
+	function create_share_link(string $abstract_path,string $filename,string $password,User $user,bool $can_read,bool $can_write)
+	{
+		global $database;
+		global $domain_name;
+		global $use_https;
+
+		$dir_id=get_directory($abstract_path,$user);
+		if($dir_id==NULL)
+		{
+			return NULL;
+		}
+		$node_id=get_node_id($filename,$dir_id);
+		if($node_id==NULL)
+		{
+			return NULL;
+		}
+		if($database->create_shared_node($password,$node_id)==false)
+		{
+			return NULL;
+		}
+		
+		$code=$database->get_code_of_node($node_id);
+		if($code==NULL)
+		{
+			return NULL;
+		}
+		if($use_https)
+		{
+			return "https://".$domain_name."/share?file=".$code;
+		}else
+		{
+			return "http://".$domain_name."/share?file=".$code;
+		}
 	}
 
 ?>

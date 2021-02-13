@@ -56,6 +56,13 @@ create table node_links (
 	foreign key (node_id) references nodes(node_id) on delete cascade
 );
 
+/*we store passwords for the shared links here, it doesn't really have anything to do with the filesystem*/
+create table shared_nodes (
+	node_id int not null,
+	passcode varchar(100) default "",
+	foreign key (node_id) references nodes(node_id) on delete cascade
+);
+
 create table trash (
 	node_id int not null
 );
