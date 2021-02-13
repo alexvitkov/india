@@ -134,15 +134,14 @@ function delete_file(filename) {
 }
 
 function rename_file(filename) {
-    var file_full_path = path_combine(get_path(), filename);
-
     var new_name = prompt(`Rename ${filename} to`, filename);
     if (!new_name)
         return;
 
     var data = new FormData();
-    data.append('path', file_full_path);
-    data.append('new_name', new_name);
+    data.append('folder', get_path());
+    data.append('old_filename', filename);
+    data.append('new_filename', new_name);
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/rename.php', true);
