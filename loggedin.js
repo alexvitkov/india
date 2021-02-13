@@ -406,7 +406,9 @@ function make_window(pwd) {
 
 
 function add_file_visuals(fileview) {
-    var is_in_trash = focus.pwd.length == 1 && focus.pwd[0] == "trash";
+    // Are we in a subdirectory of the trash folder
+    var is_in_trash = focus.pwd.length > 0 && focus.pwd[0] == "trash";
+    // Is the current filewview the trash folder itself
     var is_trash    = focus.pwd.length == 0 && fileview.filename == "trash";
 
     var visuals = document.createElement('div');
@@ -458,7 +460,7 @@ function add_file_visuals(fileview) {
     }
 
     visuals.ondragstart = (e) => {
-        if (focus.pwd.length == 0 && fileview.filename == "trash") {
+        if (is_trash || is_in_trash) {
             e.preventDefault();
             return;
         }
