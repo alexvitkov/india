@@ -182,7 +182,7 @@ require_once "node.php";
 		}
 
 
-		function get_premissions(int $node_id,int $user_id)
+		function get_permissions(int $node_id,int $user_id)
 		{
 
 			$prep=$this->pdo->prepare("
@@ -194,7 +194,7 @@ require_once "node.php";
 			$prep->bindParam(':user',$user_id);
 			if($prep->execute()==false)
 			{
-				error_log("there is an error with the sql statemtent at get_premissions");
+				error_log("there is an error with the sql statemtent at get_permissions");
 				return NULL;
 			}
 			$ret=$prep->fetch(PDO::FETCH_ASSOC);
@@ -207,7 +207,7 @@ require_once "node.php";
 				$prep->bindParam(':user',$user_id);
 				if($prep->execute()==false)
 				{
-					error_log("couldnt create access entry in get_premissions2");
+					error_log("couldnt create access entry in get_permissions2");
 					return NULL;
 				}
 
@@ -222,7 +222,7 @@ require_once "node.php";
 				$prep->bindParam(':user',$user_id);
 				if($prep->execute()==false)
 				{
-					error_log("there is an error with the sql statemtent at get_premissions3");
+					error_log("there is an error with the sql statemtent at get_permissions3");
 					return NULL;
 				}
 				$ret=$prep->fetch(PDO::FETCH_ASSOC);
@@ -232,9 +232,9 @@ require_once "node.php";
 
 		function give_view_access(int $node_id,int $user_id)
 		{
-			$premissions=$this->get_premissions($node_id,$user_id);
-			/*this isn't futile because we create access entries in get_premission if there are none*/
-			if($premissions["can_view"]==false)
+			$permissions=$this->get_permissions($node_id,$user_id);
+			/*this isn't futile because we create access entries in get_permission if there are none*/
+			if($permissions["can_view"]==false)
 			{
 				$prep=$this->pdo->prepare("update node_access 
 								set can_view=true
@@ -252,9 +252,9 @@ require_once "node.php";
 
 		function give_edit_access(int $node_id,int $user_id)
 		{
-			$premissions=$this->get_premissions($node_id,$user_id);
-			/*this isn't futile because we create access entries in get_premission if there are none*/
-			if($premissions["can_edit"]==false)
+			$permissions=$this->get_permissions($node_id,$user_id);
+			/*this isn't futile because we create access entries in get_permission if there are none*/
+			if($permissions["can_edit"]==false)
 			{
 				$prep=$this->pdo->prepare("update node_access 
 								set can_edit=true
@@ -351,7 +351,7 @@ require_once "node.php";
 				error_log("tried to create a dangling directory but sql statement failed. Fatal error!");
 				exit(1);
 			}
-			/*give premissions*/
+			/*give permissions*/
 
 			$id=$this->get_node_with_code($code_name);
 			if($id==NULL)
@@ -559,7 +559,7 @@ require_once "node.php";
 			$new_id=$this->get_node_with_code($code);
 			/*link the node to the directory*/
 			$this->link_nodes($dir_id,$new_id,$filename,$note);
-			/*give premissions to the creator*/
+			/*give permissions to the creator*/
 
 			$this->give_view_access($new_id,$user->user_id);
 			$this->give_edit_access($new_id,$user->user_id);
