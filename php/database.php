@@ -361,7 +361,7 @@ require_once "node.php";
 			}
 
 			//print count($id);
-			return $id["id"];
+			return $id;
 		}
 
 
