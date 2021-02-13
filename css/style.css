@@ -14,6 +14,10 @@ body {
 	display: flex;
 	flex: 1 0 0;
 	align-items: stretch;
+
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
 
 #page > * {

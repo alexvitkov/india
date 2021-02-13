@@ -19,7 +19,7 @@ $filename = $_POST["filename"];
 
 $dir = get_directory($folder, $user);
 if (!$dir) {
-    error_log("/php/readfile.php - invalid directory");
+    error_log("/php/readfile.php - invalid directory '$folder'");
 	http_response_code(409);
     exit(0);
 }
@@ -34,7 +34,7 @@ foreach ($contents_of_dir as $c) {
     }
 }
 if (!$file_node) {
-    error_log("/php/readfile.php - invalid filename");
+    error_log("/php/readfile.php - invalid filename '$filename'");
 	http_response_code(409);
     exit(0);
 }

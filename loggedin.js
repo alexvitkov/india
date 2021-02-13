@@ -3,14 +3,13 @@ var FORM_ASYNC = true;
 const upload_form    = document.getElementById("upload_form");
 const the_file       = document.getElementById("the_file");
 const filename_input = document.getElementById("filename");
-const upload_btn     = document.getElementById("upload_btn");
-const the_path       = document.getElementById("the_path");
-const current_directory = document.getElementById("current_directory");
+const current_directory       = document.getElementById("current_directory");
 const upload_parent_directory = document.getElementById("upload_parent_directory");
 
 the_file.onchange = on_file_added;
 
-var pwd = [];
+var windows = [];
+var focus = null;
 
 var context_menu = null;
 var dragging = null;
@@ -51,7 +50,7 @@ function on_file_added(_e) {
             body: new FormData(upload_form)
         }).then((resp) => {
             if (resp.status == 200) {
-                load_dir();
+                openfile(true);
             } else {
                 alert("Upload failed");
             }
@@ -64,17 +63,24 @@ function on_file_added(_e) {
     }
 }
 
-function load_dir() {
-    while (the_path.children.length > 1)
+function update_path_visuals() {
+    var the_path = focus.visuals.getElementsByClassName('path')[0];
+
+    while (the_path.children.length > 0)
         the_path.removeChild(the_path.lastChild);
 
-    for (let i = 0; i < pwd.length; i++) {
-        var d = pwd[i];
+    for (let i = -1; i < focus.pwd.length; i++) {
+        var d;
+        if (i >= 0) {
+            d = focus.pwd[i];
+            var separator_div = document.createElement('div');
+            separator_div.classList.add('separator');
+            the_path.appendChild(separator_div);
+            separator_div.innerText = "»";
+        }
+        else
+            d = "Root";
 
-        var separator_div = document.createElement('div');
-        separator_div.classList.add('separator');
-        the_path.appendChild(separator_div);
-        separator_div.innerText = "»";
 
         var entry = document.createElement('button');
         entry.classList.add('pathentry');
@@ -83,6 +89,34 @@ function load_dir() {
 
         add_link_functionality(entry, i + 1);
     }
+}
+
+function openfile_nondir() {
+    var data = new FormData();
+    data.append('folder', get_path(focus.pwd.length - 1));
+    data.append('filename', focus.pwd[focus.pwd.length - 1]);
+
+    var xhr = new XMLHttpRequest();
+
+    focus.pwd.push();
+
+    update_path_visuals();
+
+    xhr.open('POST', '/php/readfile.php', true);
+
+    focus.filecontents.innerText = "Loading...";
+    focus.filecontents.style.display = 'block';
+    focus.filegrid.style.display = 'none';
+
+    xhr.onload = function () {
+        focus.filecontents.innerText = xhr.responseText;
+    };
+    xhr.send(data);
+}
+
+function opendir() {
+
+    update_path_visuals();
 
     var data = new FormData();
     data.append('path', get_path());
@@ -117,6 +151,17 @@ function load_dir() {
 
     };
     xhr.send(data);
+
+    focus.filecontents.style.display = 'none';
+    focus.filegrid.style.display = 'grid';
+}
+
+function openfile(is_directory) {
+    if (is_directory) {
+        opendir();
+    } else {
+        openfile_nondir();
+    }
 }
 
 function delete_file(filename) {
@@ -128,7 +173,7 @@ function delete_file(filename) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/delete.php', true);
     xhr.onload = function () {
-        load_dir();
+        openfile(true);
     };
     xhr.send(data);
 }
@@ -146,7 +191,7 @@ function rename_file(filename) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/rename.php', true);
     xhr.onload = function () {
-        load_dir();
+        openfile(true);
     };
     xhr.send(data);
 }
@@ -160,7 +205,7 @@ function move_file(new_folder, filename) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/move.php', true);
     xhr.onload = function () {
-        load_dir();
+        openfile(true);
     };
     xhr.send(data);
 }
@@ -177,7 +222,7 @@ function new_folder() {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/mkdir.php', true);
     xhr.onload = function () {
-        load_dir();
+        openfile(true);
     };
     xhr.send(data);
 }
@@ -206,8 +251,6 @@ function begin_drag(e, obj) {
     dragging_offset_y = -e.clientY + elemRect.top;
     
 
-    console.log(elemRect);
-    console.log(e.clientY, elemRect.top);
     if (dragging_placeholder)
         obj.parentNode.insertBefore(dragging_placeholder, obj);
 
@@ -251,12 +294,12 @@ function drop_handler(dst, src) {
 
 function add_link_functionality(link, length) {
     link.onclick = () => {
-        pwd.length = length,
-        load_dir();
+        focus.pwd.length = length,
+        openfile(true);
     }
 
     link.onmouseup = (e) => {
-        if (dragging) {
+        if (dragging && dragging_fileview) {
             var new_folder = get_path(length);
             move_file(new_folder, dragging_fileview.filename);
             end_drag();
@@ -267,20 +310,72 @@ function add_link_functionality(link, length) {
     }
 }
 
-add_link_functionality(document.getElementById("home_path_entry"), 0);
-
-function open_file(fileview) {
-    var data = new FormData();
-    data.append('folder', get_path());
-    data.append('filename', fileview.filename);
-
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', '/php/readfile.php', true);
-    xhr.onload = function () {
-        console.log(xhr.responseText);
-    };
-    xhr.send(data);
+class Window {
+    constructor(pwd) {
+        this.pwd = pwd;
+    }
 }
+
+
+function make_window(pwd) {
+    var wnd = new Window(pwd);
+    windows.push(wnd);
+
+    var wnd_html = document.createElement('div');
+    wnd_html.classList.add('window');
+
+    var h2 = document.createElement('h2');
+    wnd_html.appendChild(h2);
+
+    h2.onmousedown = (e) => {
+        begin_drag(e, wnd_html);
+        e.preventDefault();
+   };
+
+    var upload_btn = document.createElement('button');
+    upload_btn.innerText = "Upload";
+    upload_btn.onclick = () => { begin_upload(); }
+    h2.appendChild(upload_btn);
+
+    var separator = document.createElement('div');
+    separator.classList.add('separator');
+    h2.appendChild(separator);
+
+    var new_folder_btn = document.createElement('button');
+    new_folder_btn.innerText = "New Folder";
+    new_folder_btn.onclick = () => { new_folder(); }
+    h2.appendChild(new_folder_btn);
+
+    separator = document.createElement('div');
+    separator.classList.add('separator');
+    h2.appendChild(separator);
+
+    path = document.createElement('div');
+    path.classList.add('path');
+    h2.appendChild(path);
+
+    wnd_html.style.width    = "800px";
+    wnd_html.style.height   = "600px";
+    wnd_html.style.position = "absolute";
+    wnd_html.style.left     = "300px";
+    wnd_html.style.top      = "300px";
+
+    wnd.visuals = wnd_html;
+
+    var filegrid = document.createElement('div');
+    filegrid.classList.add('files');
+    wnd_html.appendChild(filegrid);
+    wnd.filegrid = filegrid;
+
+    var filecontents = document.createElement('div');
+    filegrid.classList.add('filecontents');
+    wnd_html.appendChild(filecontents);
+    wnd.filecontents = filecontents;
+
+    document.body.appendChild(wnd_html);
+    return wnd;
+}
+
 
 function add_file_visuals(fileview) {
     var visuals = document.createElement('div');
@@ -291,28 +386,23 @@ function add_file_visuals(fileview) {
 
     if (fileview.is_directory) {
         img.src="/mimeicons/directory.png";
-        visuals.onclick = () => {
-            pwd.push(fileview.filename);
-            load_dir();
-        }
     } else {
         img.src=`/mimeicons/${fileview.mimetype.replace("/", "-")}.png`;
-        visuals.onclick = () => {
-            open_file(fileview);
-        }
+    }
+
+    visuals.onclick = () => {
+        focus.pwd.push(fileview.filename);
+        openfile(fileview.is_directory);
     }
 
     visuals.oncontextmenu = (e) => {
         if (!dragging) {
             context(e, [
                 ['Open', () => {
-                    if (fileview.is_directory) { 
-                        pwd.push(fileview.filename);
-                        load_dir();
-                    } else {
-                        open_file(fileview);
-                    }
+                    focus.pwd.push(fileview.filename);
+                    openfile(fileview.is_directory);
                 }],
+                ['Open in New Window', () => {alert('not implemented')}],
                 ['Rename', () => { rename_file(fileview.filename); }],
                 ['Share',  () => {alert('not implemented')}],
                 ['Delete', () => { delete_file(fileview.filename); }],
@@ -345,7 +435,7 @@ function add_file_visuals(fileview) {
     visuals.appendChild(img);
     visuals.appendChild(filename);
 
-    current_directory.appendChild(visuals);
+    focus.visuals.getElementsByClassName('files')[0].appendChild(visuals);
 }
 
 function begin_upload() {
@@ -374,12 +464,12 @@ function context(e, entries) {
 
 function get_path(max_length) {
     if (max_length == undefined) {
-        max_length = pwd.length;
+        max_length = focus.pwd.length;
     }
 
     var path = "/";
     for (let i = 0; i < max_length; i++) {
-        path += pwd[i];
+        path += focus.pwd[i];
         if (i != max_length - 1)
             path += "/";
     }
@@ -406,7 +496,7 @@ document.body.onmousemove = (e) => {
     }
 }
 
-document.body.onmouseup = (e) => {
+document.body.onmouseup = (_e) => {
     if (dragging)
         end_drag();
 }
@@ -420,14 +510,7 @@ document.body.oncontextmenu = (e) => {
         context_menu.remove();
 }
 
-function init_window(wnd) {
-    var h2 = wnd.getElementsByTagName("h2")[0];
-    h2.onmousedown = (e) => {
-        begin_drag(e, wnd);
-        e.preventDefault();
-    };
-}
 
-init_window(document.getElementById("root_window"));
-
-load_dir();
+var root_window = make_window([]);
+focus = root_window;
+openfile(true);
