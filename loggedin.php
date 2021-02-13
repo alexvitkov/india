@@ -6,7 +6,7 @@
             <button id="upload_btn" onclick="new_folder()">New Folder</button>
             <div class="separator"></div>
             <div class="path" id="the_path">
-                <button class="pathentry" onclick="pwd.length = 0; load_dir();"><?php echo $_SESSION['username'] ?>'s files</button>
+                <button class="pathentry" id="home_path_entry"><?php echo $_SESSION['username'] ?>'s files</button>
             </div>
         </h2>
 

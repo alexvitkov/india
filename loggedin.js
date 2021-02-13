@@ -81,10 +81,7 @@ function load_dir() {
         entry.innerText = d;
         the_path.appendChild(entry);
 
-        entry.onclick = () => {
-            pwd.length = i + 1;
-            load_dir();
-        }
+        add_link_functionality(entry, i + 1);
     }
 
     var data = new FormData();
@@ -231,6 +228,26 @@ function drop_handler(dst, src) {
     }
 }
 
+function add_link_functionality(link, length) {
+    link.onclick = () => {
+        pwd.length = length,
+        load_dir();
+    }
+
+    link.onmouseup = (e) => {
+        if (dragging) {
+            var new_folder = get_path(length);
+            move_file(new_folder, dragging_fileview.filename);
+            end_drag();
+
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }
+}
+
+add_link_functionality(document.getElementById("home_path_entry"), 0);
+
 function add_file_visuals(fileview) {
     var visuals = document.createElement('div');
     fileview.visuals = visuals;
@@ -317,12 +334,17 @@ function context(e, entries) {
     document.body.appendChild(context_menu);
 }
 
-function get_path() {
+function get_path(max_length) {
+    if (max_length == undefined) {
+        max_length = pwd.length;
+    }
+
     var path = "/";
-    for (const d of pwd)
-        path += d + "/";
-    if (path.length > 1)
-        path = path.substring(0, path.length - 1);
+    for (let i = 0; i < max_length; i++) {
+        path += pwd[i];
+        if (i != max_length - 1)
+            path + "/";
+    }
     return path;
 }
 

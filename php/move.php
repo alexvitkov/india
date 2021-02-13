@@ -8,7 +8,7 @@ require_once "misc.php";
 session_start();
 
 if (!isset($_POST['old_folder']) || !isset($_POST['new_folder']) || !isset($_POST['filename'])) {
-	error_log("bad /php/move.php call $_POST of:$_POST[old_folder] nf:$_POST[new_folder] fn:$_POST[filename]");
+	error_log("bad /php/move.php call");
 	http_response_code(400);
 	exit(1);
 }
