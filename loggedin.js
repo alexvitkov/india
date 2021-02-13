@@ -169,11 +169,18 @@ function move_to_trash(filename) {
     move_file("/trash", filename, path_combine(get_path(), filename));
 }
 
-function delete_file(filename) {
-    var file_full_path = path_combine(get_path(), filename);
+function restore_from_trash(filename) {
+    var split = filename.split("/");
+    var new_filename = split.pop();
+    var new_directory = "/" + split.join("/");
 
+    move_file(new_directory, filename, new_filename);
+}
+
+function delete_file(filename) {
     var data = new FormData();
-    data.append('path', file_full_path);
+    data.append('folder', get_path());
+    data.append('filename', filename);
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/delete.php', true);
@@ -399,6 +406,8 @@ function make_window(pwd) {
 
 
 function add_file_visuals(fileview) {
+    var is_in_trash = focus.pwd.length == 1 && focus.pwd[0] == "trash";
+
     var visuals = document.createElement('div');
     fileview.visuals = visuals;
 
@@ -421,16 +430,27 @@ function add_file_visuals(fileview) {
 
     visuals.oncontextmenu = (e) => {
         if (!dragging) {
-            context(e, [
+
+            var context_list = [
                 ['Open', () => {
                     focus.pwd.push(fileview.filename);
                     openfile(fileview.is_directory);
-                }],
+                }], 
                 ['Open in New Window', () => {alert('not implemented')}],
-                ['Rename', () => { rename_file(fileview.filename); }],
-                ['Share',  () => {alert('not implemented')}],
-                ['Delete', () => { move_to_trash(fileview.filename); }],
-            ]);
+            ];
+
+            if (is_in_trash) {
+                context_list.push(['Restore', () => {  restore_from_trash(fileview.filename); }]);
+                context_list.push(['Delete forever', () => { delete_file(fileview.filename); }]);
+            } else {
+                context_list.push(
+                    ['Rename', () => { rename_file(fileview.filename); }],
+                    ['Share',  () => {alert('not implemented')}],
+                    ['Delete', () => { move_to_trash(fileview.filename); }]
+                );
+            }
+
+            context(e, context_list);
         }
         e.preventDefault();
         e.stopPropagation();
@@ -451,10 +471,13 @@ function add_file_visuals(fileview) {
 
     visuals.classList.add('file');
     filename.classList.add('filename');
-    filename.innerText = fileview.filename;
 
-    if (fileview.mimetype == "pending")
-        visuals.classList.add('pending');
+    if (is_in_trash) {
+        var split = fileview.filename.split("/");
+        filename.innerText = split[split.length - 1];
+    } else {
+        filename.innerText = fileview.filename;
+    }
 
     visuals.appendChild(img);
     visuals.appendChild(filename);
