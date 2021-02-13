@@ -458,19 +458,25 @@ require_once "node.php";
 			}
 
 		}
-		function create_shared_node(string $password,int $node_id):bool
+		function create_shared_node(string $password,int $node_id)
 		{
-			$prep=$this->pdo->prepare("insert into shared_nodes(node_id,passcode)
-							values (:id,:pass)
+			$code=$this->get_random_node_name("");
+			$prep=$this->pdo->prepare("insert into shared_nodes(node_id,passcode,code)
+							values (:id,:pass,:code)
 						");
 			$prep->bindParam(':id',$node_id);
 			$prep->bindParam(':pass',$password);
+			$prep->bindParam(':code',$code);
 			if($prep->execute()==false)
 			{
 				error_log("could not create shared node in create_shared_node");
-				return false;
+				return NULL;
 			}
-			return true;
+			$shared_node=new Shared_Node();
+			$shared_node->code=$code;
+			$shared_node->node_id=$node_id;
+			$shared_node->password=$password;
+			return $shared_node;
 		}
 		function get_node(int $node_id)
 		{
@@ -587,6 +593,24 @@ require_once "node.php";
 			{
 				return false;
 			}
+		}
+		function get_shared_node(string $code)
+		{
+			$prepare=$this->pdo->prepare("
+							select * from shared_nodes where code=:code	
+					");
+			$prepare->bindParam(':code',$code);
+			if($prepare->execute()==false)
+			{
+				error_log("sql statement at get_shared_node failed");
+				return NULL;
+			}
+			$ret=$prepare->fetch(PDO::FETCH_ASSOC);
+			$nod=new Shared_Node();
+			$nod->node_id=$ret["node_id"];
+			$nod->password=$ret["passcode"];
+			$nod->code=$ret["code"];
+			return $nod;
 		}
 
 		/*returns false if username is taken, email is not checked here*/

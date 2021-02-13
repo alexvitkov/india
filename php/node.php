@@ -10,6 +10,12 @@ require_once "user.php";
 		public $type;
 		public $code;
 	}
+	class Shared_Node
+	{
+		public $node_id;
+		public $code;
+		public $password;
+	}
 	/*path is in terms of the simulated filesystem*/
 	/*returns NULL on error*/
 	function get_directory(string $abstract_path,User $user)
@@ -86,22 +92,22 @@ require_once "user.php";
 		{
 			return NULL;
 		}
-		if($database->create_shared_node($password,$node_id)==false)
+		$shared_node=$database->create_shared_node($password,$node_id);
+		if($shared_node==NULL)
 		{
 			return NULL;
 		}
 		
-		$code=$database->get_code_of_node($node_id);
-		if($code==NULL)
-		{
-			return NULL;
-		}
+		if($can_read)
+			$database->give_view_access($node_id,$user->user_id);
+		if($can_write)
+			$database->give_edit_access($node_id,$user->user_id);
 		if($use_https)
 		{
-			return "https://".$domain_name."/php/share.php?file=".$code;
+			return "https://".$domain_name."/php/share.php?file=".$shared_node->code;
 		}else
 		{
-			return "http://".$domain_name."/php/share.php?file=".$code;
+			return "http://".$domain_name."/php/share.php?file=".$shared_node->code;
 		}
 	}
 

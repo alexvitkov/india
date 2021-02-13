@@ -61,6 +61,7 @@ create table node_links (
 create table shared_nodes (
 	node_id int not null,
 	passcode varchar(100) default "",
+	code varchar(100) default "",
 	foreign key (node_id) references nodes(node_id) on delete cascade
 );
 
