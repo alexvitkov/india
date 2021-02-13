@@ -393,7 +393,10 @@ function add_file_visuals(fileview) {
     var filename = document.createElement('div');
 
     if (fileview.is_directory) {
-        img.src="/mimeicons/directory.png";
+        if (fileview.filename == "trash")
+            img.src="/mimeicons/user-trash.png";
+        else
+            img.src="/mimeicons/directory.png";
     } else {
         img.src=`/mimeicons/${fileview.mimetype.replace("/", "-")}.png`;
     }
