@@ -107,7 +107,13 @@ require_once "node.php";
 				return NULL;
 			}
 			$ret= $statement->fetch(PDO::FETCH_ASSOC);
-			return $ret["id"];
+			if(isset($ret["id"]))
+			{
+				return $ret["id"];
+			}else
+			{
+				return NULL;
+			}
 		}
 		/* I think this only makes sense if node is a dir*/
 		/* returns assoc array of nodes*/
@@ -348,7 +354,7 @@ require_once "node.php";
 			/*give premissions*/
 
 			$id=$this->get_node_with_code($code_name);
-			if($id!=NULL)
+			if($id==NULL)
 			{
 				error_log("created a dangling directory but couldn't find it afterward. Fatal error!");
 				exit(1);
