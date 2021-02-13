@@ -13,7 +13,12 @@ if (!isset($_POST['old_folder']) || !isset($_POST['new_folder']) || !isset($_POS
 	exit(1);
 }
 
-$filename   = $_POST["filename"];
+$new_filename = $_POST["filename"];
+$old_filename = $_POST["filename"];
+
+if (isset($_POST['new_filename']))
+    $new_filename = $_POST['new_filename'];
+
 $old_folder = $_POST["old_folder"];
 $new_folder = $_POST["new_folder"];
 $user       = $_SESSION['user_object'];
@@ -30,8 +35,8 @@ if (!$old_dir || !$new_dir) {
 // Check if the filename is taken in the new dir
 $contents_of_new_dir = $database->get_links_of($new_dir);
 foreach ($contents_of_new_dir as $c) {
-    if ($c['name'] == $filename) {
-        error_log("filename $filename taken in $new_folder");
+    if ($c['name'] == $new_filename) {
+        error_log("filename $new_filename taken in $new_folder");
         http_response_code(409);
         exit(0);
     }
@@ -41,14 +46,14 @@ foreach ($contents_of_new_dir as $c) {
 $file_node = null;
 $contents_of_old_dir = $database->get_links_of($old_dir);
 foreach ($contents_of_old_dir as $c) {
-    if ($c['name'] == $filename) {
+    if ($c['name'] == $old_filename) {
         $file_node = $c['id'];
         break;
     }
 }
 
 if ($file_node == null) {
-    error_log("/php/move.php failed - file $old_folder/$filename doesn't exist");
+    error_log("/php/move.php failed - file $old_folder/$new_filename doesn't exist");
     http_response_code(409);
     exit(0);
 }
@@ -57,16 +62,18 @@ if ($file_node == null) {
 // Update the node_link
 $move = $database->pdo->prepare("
     UPDATE node_links
-    SET    directory_id = :new_dir
+    SET    directory_id = :new_dir,
+           name         = :new_filename
     WHERE  directory_id = :old_dir
     AND    node_id      = :file_node
-    AND    name         = :filename
+    AND    name         = :old_filename
 ");
 
-$move->bindParam(':new_dir',   $new_dir);
-$move->bindParam(':old_dir',   $old_dir);
-$move->bindParam(':file_node', $file_node);
-$move->bindParam(':filename',  $filename);
+$move->bindParam(':new_dir',      $new_dir);
+$move->bindParam(':old_dir',      $old_dir);
+$move->bindParam(':file_node',    $file_node);
+$move->bindParam(':old_filename', $old_filename);
+$move->bindParam(':new_filename', $new_filename);
 
 if(!$move->execute()) {
     error_log("extremely sad shit");
