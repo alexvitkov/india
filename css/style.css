@@ -20,6 +20,13 @@ body {
 	flex: 1 0 0;
 }
 
+/* Disable the black outline that Chromium browsers put on focused buttons */
+input:focus,
+button:focus 
+{
+    outline:0;
+}
+
 #header {
 	background: white;
 	margin: 0;
