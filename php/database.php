@@ -378,6 +378,8 @@ require_once "node.php";
 
 		function unlink_nodes(int $dir_id, string $filename)
 		{
+			/*TODO delet this*/
+			error_log("in unlink nodes");
 			$prep=$this->pdo->prepare("delete from node_links
 						   where directory_id=:dir_id and name=:name
 						");
@@ -388,21 +390,29 @@ require_once "node.php";
 				error_log("there was an error with the first statement in unlink_nodes");
 				return;
 			}
+			error_log("in pre stuff in unlink nodes");
+			$prep=$this->pdo->prepare("select count(1) as count from trash");
+			$prep->execute() or die(1);
 			do{
-				$prep=$this->pdo->prepare("select count(1) as count from trash");
+
+
+				$prep=$this->pdo->prepare("select count(1) as count from super_trash");
 				$prep->execute() or die(1);
-				$res=$prep->fetch(PDO::FETCH_ASSOC);
-				$prep=$this->pdo->prepare("insert into super_trash select node_id from trash");
-				$prep->execute() or die(1);
-				$prep=$this->pdo->prepare("delete from trash");
-				$prep->execute() or die(1);
-				$prep=$this->pdo->prepare("delete from links
-							   where directory_id in 
-							   (select node_id from super_trash)
-							   ");
+				$super_trash_count=$prep->fetch(PDO::FETCH_ASSOC);
+				$prep=$this->pdo->prepare("delete from super_trash");
 				$prep->execute() or die(1);
 
-			}while($res["count"]!=0);
+
+
+				$prep=$this->pdo->prepare("select count(1) as count from trash");
+				$prep->execute() or die(1);
+				$trash_count=$prep->fetch(PDO::FETCH_ASSOC);
+				$prep=$this->pdo->prepare("delete from trash");
+				$prep->execute() or die(1);
+
+				error_log("asdf: ".$trash_count["count"]." ".$super_trash_count["count"]);
+			}while($trash_count["count"]!=$super_trash_count["count"]);
+
 			$prep=$this->pdo->prepare("select code from nodes where node_id in
 							(select node_id from super_trash)");
 			$prep->execute() or die(1);
@@ -412,9 +422,10 @@ require_once "node.php";
 				unlink($storage_root,"/".$node["code"]);
 			}
 			$prep=$this->pdo->prepare("delete from nodes where node_id in
-								(select node_id from super_trash");
+								(select node_id from super_trash)");
 			$prep->execute() or die(1);
 			$prep=$this->pdo->prepare("delete from super_trash");
+			$prep->execute() or die(1);
 
 
 		}

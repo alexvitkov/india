@@ -55,5 +55,11 @@ require_once "user.php";
 			return $dir_id;
 		}
 	}
+	function unlink_from_folder(string $abstract_path,string $filename,User $user)
+	{
+		global $database;
+		$parent_dir_id=get_directory($abstract_path,$user);
+		$database->unlink_nodes($parent_dir_id,$filename);
+	}
 
 ?>
