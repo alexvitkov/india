@@ -290,6 +290,11 @@ input[type=submit]:hover {
     flex: 1 0 0;
 }
 
+.filecontents {
+    padding: 0.8rem;
+    font-size: 1.1rem;
+}
+
 .window h3,
 .window > h2 {
 	color: #4d4d4d;
@@ -316,7 +321,7 @@ input[type=submit]:hover {
 }
 
 .window.dragged {
-    opacity: 0.9;
+    /* opacity: 0.9; */
 }
 
 .files {
