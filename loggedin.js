@@ -123,7 +123,7 @@ function load_dir() {
 }
 
 function delete_file(filename) {
-    var file_full_path = get_path() + "/" + filename;
+    var file_full_path = path_combine(get_path(), filename);
 
     var data = new FormData();
     data.append('path', file_full_path);
@@ -137,7 +137,7 @@ function delete_file(filename) {
 }
 
 function rename_file(filename) {
-    var file_full_path = get_path() + filename;
+    var file_full_path = path_combine(get_path(), filename);
 
     var new_name = prompt(`Rename ${filename} to`, filename);
     if (!new_name)
@@ -149,6 +149,20 @@ function rename_file(filename) {
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/rename.php', true);
+    xhr.onload = function () {
+        load_dir();
+    };
+    xhr.send(data);
+}
+
+function move_file(new_folder, filename) {
+    var data = new FormData();
+    data.append('old_folder', get_path());
+    data.append('new_folder', new_folder);
+    data.append('filename',   filename);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/php/move.php', true);
     xhr.onload = function () {
         load_dir();
     };
@@ -210,7 +224,11 @@ function end_drag(e) {
 }
 
 function drop_handler(dst, src) {
-    alert(`Dropped ${dst.filename} on ${src.filename}`);
+    if (dst.is_directory) {
+        move_file(path_combine(get_path(), dst.filename), src.filename);
+    } else {
+        alert(`Dropped ${dst.filename} on ${src.filename}`);
+    }
 }
 
 function add_file_visuals(fileview) {
@@ -256,7 +274,7 @@ function add_file_visuals(fileview) {
 
     visuals.onmouseup = (e) => {
         if (dragging) {
-            drop_handler(dragging_fileview, fileview);
+            drop_handler(fileview, dragging_fileview);
             end_drag();
         }
         e.preventDefault();
@@ -306,6 +324,14 @@ function get_path() {
     if (path.length > 1)
         path = path.substring(0, path.length - 1);
     return path;
+}
+
+function path_combine(a, b) {
+    const last_char = a.slice(-1);
+    if (last_char == "/")
+        return a + b;
+    else
+        return a + "/" + b;
 }
 
 document.body.onclick = () => {
