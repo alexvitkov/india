@@ -291,7 +291,6 @@ require_once "node.php";
 		   we remove the node and
 		   1. move the file represented by the node to the trash folder
 		   2. remove the file
-		   3. if node is a directory - delete all children nodes
 		   depends on the conf file
 		 */
 		function delete_node_by_id(int $node_id)
@@ -377,32 +376,45 @@ require_once "node.php";
 		}
 
 
-		function unlink_nodes(int $dir_id, int $node_id)
+		function unlink_nodes(int $dir_id, string $filename)
 		{
 			$prep=$this->pdo->prepare("delete from node_links
-						   where directory_id=:dir_id and node_id=:node_id
+						   where directory_id=:dir_id and name=:name
 						");
 			$prep->bindParam(':dir_id',$dir_id);
-			$prep->bindParam(':node_id',$node_id);
+			$prep->bindParam(':name',$filename);
 			if($prep->execute()==false)
 			{
 				error_log("there was an error with the first statement in unlink_nodes");
 				return;
 			}
-			$prep=$this->pdo->prepare("select node_id 
-						   from node_links 
-						   where node_id=:id
-							");
-			$prep->bindParam(':id',$node_id);
-			if($prep->execute()==false)
+			do{
+				$prep=$this->pdo->prepare("select count(1) as count from trash");
+				$prep->execute() or die(1);
+				$res=$prep->fetch(PDO::FETCH_ASSOC);
+				$prep=$this->pdo->prepare("insert into super_trash select node_id from trash");
+				$prep->execute() or die(1);
+				$prep=$this->pdo->prepare("delete from trash");
+				$prep->execute() or die(1);
+				$prep=$this->pdo->prepare("delete from links
+							   where directory_id in 
+							   (select node_id from super_trash)
+							   ");
+				$prep->execute() or die(1);
+
+			}while($res["count"]!=0);
+			$prep=$this->pdo->prepare("select code from nodes where node_id in
+							(select node_id from super_trash)");
+			$prep->execute() or die(1);
+			$res=$prep->fetchAll(PDO::FETCH_ASSOC);
+			foreach($res as $node)
 			{
-				error_log("there was an error with the second statement in unlink_nodes");
-				return;
+				unlink($storage_root,"/".$node["code"]);
 			}
-			if(count($prep->fetchALL(PDO::FETCH_ASSOC))==0)
-			{
-				delete_node_by_id($node_id);
-			}
+			$prep=$this->pdo->prepare("delete from nodes where node_id in
+								(select node_id from super_trash");
+			$prep->execute() or die(1);
+			$prep=$this->pdo->prepare("delete from super_trash");
 
 
 		}
