@@ -21,7 +21,8 @@ $database_location="localhost";
 $storage_root = "/srv/apache/testing/project/files/";
 }
 
-
+/*if we save deleted files just in case of an error*/
+$has_trash=true;
 $password_hash_algo=PASSWORD_BCRYPT;
 
 $has_email_verification=false;

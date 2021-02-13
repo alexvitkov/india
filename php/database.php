@@ -262,6 +262,72 @@ require_once "node.php";
 
 			}
 		}
+		/*returns NULL if directory or error*/
+		function get_code_of_node(int $node_id)
+		{
+			global $storage_root;
+
+			$prep=$this->pdo->prepare("select code
+						   from nodes
+						   where node_id=:id
+						  ");
+			$prep->bindParam(':id',$node_id);
+			if($prep->execute()==false)
+			{
+				error_log("could not execute sql statement in get_file_location_of_node");
+				return NULL;
+			}
+			$hold=$prep->fetch(PDO::FETCH_ASSOC);
+			if(count($hold)!=1)
+			{
+				return NULL;
+			}else
+			{
+				/*BEWARE*/
+				return $hold["code"];
+			}
+		}
+		/*
+		   we remove the node and
+		   1. move the file represented by the node to the trash folder
+		   2. remove the file
+		   depends on the conf file
+		 */
+		function delete_node_by_id(int $node_id)
+		{
+			global $has_trash;
+			global $storage_root;
+
+			$location=get_file_location_of_node($node_id);
+
+			/*actually delete the file*/
+			if($has_trash)
+			{
+				/*BEWARE*/
+				if(!copy($storage_root."/".$location,$storage_root."/trash/".$location))
+				{
+					error_log("could not copy file aborting node deletion in delete_node_by_id");
+					return;
+				}
+			}
+			unlink($storage_root,"/".$location);
+
+			if($location==NULL)
+			{
+				error_log("trying to delete a node that does not exist in delete_node_by_id!");
+				return;
+			}
+			$prep=$this->pdo->prepare("delete
+						   from nodes
+						   where node_id=:id
+						   ");
+			$prep->bindParam(':id',$node_id);
+			if($prep->execute()==false)
+			{
+				error_log("sql statement in delete_node_by_id could not execute");
+				return NULL;
+			}
+		}
 
 		/*this is used to create seperate roots for the users*/
 		function create_dangling_directory(): int
@@ -291,6 +357,7 @@ require_once "node.php";
 			return $id["id"];
 		}
 
+
 		/*links source to target*/
 		function link_nodes(int $target_id,int $source_id,string $name,string $note)
 		{
@@ -307,6 +374,15 @@ require_once "node.php";
 				error_log("there was an error with the statement ni link_nodes");
 			}
 		}
+
+		function create_home_directory():int
+		{
+			$ret=$this->create_dangling_directory();
+			$trash_folder_id=$this->create_dangling_directory();
+			$this->link_nodes($ret,$trash_folder_id,"trash","trash folder");
+			return $ret;
+		}
+
 		function check_if_name_is_taken(string $filename,int $dir_id):bool
 		{
 			if($this->get_node_id($filename,$dir_id)!=NULL)
@@ -434,7 +510,7 @@ require_once "node.php";
 				}else
 				{
 					$hashed_pass=password_hash($password,$password_hash_algo);
-					$home_dir=$this->create_dangling_directory();
+					$home_dir=$this->create_home_directory();
 					$prep=$this->pdo->prepare("insert into users(username,password,email,home_directory) values(:username,:password,:email,:dir)");
 					$prep->bindParam(':username',$user);
 					$prep->bindParam(':password',$hashed_pass);

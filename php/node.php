@@ -1,12 +1,10 @@
 <?php 
 require_once "database.php";
 require_once "user.php";
-
 	
 	/*path is in terms of the simulated filesystem*/
 	function get_directory(string $abstract_path,User $user)
 	{
-		error_log("getting directory".$abstract_path." for ".$user->username);
 
 		global $database;
 		if($abstract_path[0] != "/")
