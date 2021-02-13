@@ -407,6 +407,7 @@ function make_window(pwd) {
 
 function add_file_visuals(fileview) {
     var is_in_trash = focus.pwd.length == 1 && focus.pwd[0] == "trash";
+    var is_trash    = focus.pwd.length == 0 && fileview.filename == "trash";
 
     var visuals = document.createElement('div');
     fileview.visuals = visuals;
@@ -442,7 +443,7 @@ function add_file_visuals(fileview) {
             if (is_in_trash) {
                 context_list.push(['Restore', () => {  restore_from_trash(fileview.filename); }]);
                 context_list.push(['Delete forever', () => { delete_file(fileview.filename); }]);
-            } else {
+            } else if (!is_trash) {
                 context_list.push(
                     ['Rename', () => { rename_file(fileview.filename); }],
                     ['Share',  () => {alert('not implemented')}],
@@ -479,6 +480,8 @@ function add_file_visuals(fileview) {
     if (is_in_trash) {
         var split = fileview.filename.split("/");
         filename.innerText = split[split.length - 1];
+    } else if (is_trash) {
+        filename.innerText = "Trash";
     } else {
         filename.innerText = fileview.filename;
     }
