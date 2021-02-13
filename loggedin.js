@@ -106,7 +106,7 @@ function openfile_nondir() {
 
     focus.filecontents.innerText = "Loading...";
     focus.filecontents.style.display = 'block';
-    focus.filegrid.style.display = 'none';
+    focus.foldercontents.style.display = 'none';
 
     xhr.onload = function () {
         focus.filecontents.innerText = xhr.responseText;
@@ -152,8 +152,8 @@ function opendir() {
     };
     xhr.send(data);
 
-    focus.filecontents.style.display = 'none';
-    focus.filegrid.style.display = 'grid';
+    focus.filecontents.style.display   = 'none';
+    focus.foldercontents.style.display = 'block';
 }
 
 function openfile(is_directory) {
@@ -332,23 +332,6 @@ function make_window(pwd) {
         e.preventDefault();
    };
 
-    var upload_btn = document.createElement('button');
-    upload_btn.innerText = "Upload";
-    upload_btn.onclick = () => { begin_upload(); }
-    h2.appendChild(upload_btn);
-
-    var separator = document.createElement('div');
-    separator.classList.add('separator');
-    h2.appendChild(separator);
-
-    var new_folder_btn = document.createElement('button');
-    new_folder_btn.innerText = "New Folder";
-    new_folder_btn.onclick = () => { new_folder(); }
-    h2.appendChild(new_folder_btn);
-
-    separator = document.createElement('div');
-    separator.classList.add('separator');
-    h2.appendChild(separator);
 
     path = document.createElement('div');
     path.classList.add('path');
@@ -362,15 +345,41 @@ function make_window(pwd) {
 
     wnd.visuals = wnd_html;
 
-    var filegrid = document.createElement('div');
-    filegrid.classList.add('files');
-    wnd_html.appendChild(filegrid);
-    wnd.filegrid = filegrid;
+    {
+        wnd.foldercontents = document.createElement('div');
+        wnd_html.appendChild(wnd.foldercontents);
 
-    var filecontents = document.createElement('div');
-    filegrid.classList.add('filecontents');
-    wnd_html.appendChild(filecontents);
-    wnd.filecontents = filecontents;
+        var h3 = document.createElement('h3');
+        wnd.foldercontents.appendChild(h3);
+
+        var upload_btn = document.createElement('button');
+        upload_btn.innerText = "Upload";
+        upload_btn.onclick = () => { begin_upload(); }
+        h3.appendChild(upload_btn);
+
+        var separator = document.createElement('div');
+        separator.classList.add('separator');
+        h3.appendChild(separator);
+
+        var new_folder_btn = document.createElement('button');
+        new_folder_btn.innerText = "New Folder";
+        new_folder_btn.onclick = () => { new_folder(); }
+        h3.appendChild(new_folder_btn);
+
+        separator = document.createElement('div');
+        separator.classList.add('separator');
+        h3.appendChild(separator);
+
+        wnd.filegrid = document.createElement('div');
+        wnd.filegrid.classList.add('files');
+        wnd.foldercontents.appendChild(wnd.filegrid);
+    }
+
+    {
+        wnd.filecontents = document.createElement('div');
+        wnd.filecontents.classList.add('filecontents');
+        wnd_html.appendChild(wnd.filecontents);
+    }
 
     document.body.appendChild(wnd_html);
     return wnd;
@@ -435,7 +444,7 @@ function add_file_visuals(fileview) {
     visuals.appendChild(img);
     visuals.appendChild(filename);
 
-    focus.visuals.getElementsByClassName('files')[0].appendChild(visuals);
+    focus.filegrid.appendChild(visuals);
 }
 
 function begin_upload() {

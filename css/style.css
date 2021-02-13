@@ -156,18 +156,20 @@ form > h2 {
 }
 
 
-.window > h2 button {
+.window h3 button,
+.window > h2 button 
+{
     border: none;
     padding: 0.3rem 1rem;
     background: inherit;
     border-radius: 0;
 }
 
-.window > h2 button:not(.pathentry):hover {
+.window h3 button:not(.pathentry):hover {
     background: white;
 }
 
-.window > h2 > .separator {
+.window h3 > .separator {
     flex: 0 0 1px;
     align-self: stretch;
     background: #bbb;
@@ -280,6 +282,7 @@ input[type=submit]:hover {
     height: 600px;
 }
 
+.window h3,
 .window > h2 {
 	color: #4d4d4d;
 	background: #f0f0f0;
@@ -294,9 +297,15 @@ input[type=submit]:hover {
     font-weight: normal;
     padding: 0rem;
     border-bottom: 1px solid #bbb;
+}
+
+.window > h2 {
     font-size: 1.3rem;
 }
 
+.window h3 {
+    font-size: 1.2rem;
+}
 
 .files {
     padding: 0.3rem;
@@ -343,11 +352,9 @@ input[type=submit]:hover {
     filter: brightness(120%);
 }
 
-
 .path {
     display: flex;
     align-items: stretch;
-    font-size: 0.8em;
 }
 
 .path > .separator {
