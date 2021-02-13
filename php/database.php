@@ -477,6 +477,7 @@ require_once "node.php";
 			}
 			$nod=$prep->fetch(PDO::FETCH_ASSOC);
 			$ret=new Node();
+
 			$ret->node_id=$nod["node_id"];
 			$ret->is_directory=$nod["is_directory"];
 			$ret->relative_path=$nod["relative_path"];

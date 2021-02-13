@@ -45,7 +45,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 	exit(0);
 }else if($_SERVER["REQUEST_METHOD"]== "GET")
 {
-	$code=$_GET["code"];
+	$code=$_GET["file"];
 	$file_id=$database->get_node_with_code($code);
 	if($file_id==NULL)
 	{
@@ -63,8 +63,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 			exit(1);
 		}else
 		{
-			header("Content-type: $node[type]");
-			readfile("$storage_root/$node[code]");
+			header("Content-type: $node->type");
+			readfile("$storage_root/$node->code");
 		}
 	}
 

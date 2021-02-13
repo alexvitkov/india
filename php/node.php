@@ -98,10 +98,10 @@ require_once "user.php";
 		}
 		if($use_https)
 		{
-			return "https://".$domain_name."/share?file=".$code;
+			return "https://".$domain_name."/php/share.php?file=".$code;
 		}else
 		{
-			return "http://".$domain_name."/share?file=".$code;
+			return "http://".$domain_name."/php/share.php?file=".$code;
 		}
 	}
 
