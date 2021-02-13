@@ -250,12 +250,12 @@ add_link_functionality(document.getElementById("home_path_entry"), 0);
 function open_file(fileview) {
     var data = new FormData();
     data.append('folder', get_path());
-    data.append('path', get_path());
+    data.append('filename', fileview.filename);
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/readfile.php', true);
     xhr.onload = function () {
-
+        console.log(xhr.responseText);
     };
     xhr.send(data);
 }

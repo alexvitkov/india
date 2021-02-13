@@ -6,7 +6,7 @@ require_once "node.php";
 require_once "misc.php";
 
 session_start();
-if (!isset($_POST["filename"]) || !isset($_FILES["folder"])) {
+if (!isset($_POST["filename"]) || !isset($_POST["folder"])) {
 	error_log("/php/readfile.php - invalid request");
 	http_response_code(400);
 	exit(1);
@@ -19,7 +19,7 @@ $filename = $_POST["filename"];
 
 $dir = get_directory($folder, $user);
 if (!$dir) {
-    error_log("i/php/readfile.php - invalid directory");
+    error_log("/php/readfile.php - invalid directory");
 	http_response_code(409);
     exit(0);
 }
@@ -30,7 +30,15 @@ $file_node = null;
 foreach ($contents_of_dir as $c) {
     if ($c['name'] == $filename) {
         $file_node = $c;
+        break;
     }
 }
+if (!$file_node) {
+    error_log("/php/readfile.php - invalid filename");
+	http_response_code(409);
+    exit(0);
+}
 
-var_error_log($file_node);
+header("Content-type: $file_node[mimetype]");
+
+readfile("$storage_root/$file_node[code]");
