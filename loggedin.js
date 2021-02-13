@@ -168,8 +168,8 @@ function openfile_nondir() {
     xhr.open('POST', '/php/readfile.php', true);
 
     focus.filecontents.innerText = "";
-    focus.filecontents.style.display = 'block';
-    focus.foldercontents.style.display = 'none';
+    focus.filecontentsroot.style.display = 'block';
+    focus.foldercontents.style.display   = 'none';
 
     if (mimetype.split("/")[0] == "image") {
         xhr.responseType = 'arraybuffer';
@@ -177,13 +177,47 @@ function openfile_nondir() {
             var b = base64ArrayBuffer(xhr.response);
             var image = new Image();
             image.src = `data:image/png;base64,${b}`;
+            image.style.minWidth = "0px";
+            image.style.minHeight = "0px";
+
             focus.filecontents.appendChild(image);
+            focus.filecontents.display = "flex";
         }
     }
     else {
         xhr.onload = function () {
             focus.filecontents.innerText = xhr.responseText;
         };
+    }
+
+    xhr.send(data);
+}
+
+function share(in_file, filename) {
+    if (in_file) {
+        var folder = get_path(focus.pwd.length - 1);
+        filename = focus.pwd[focus.pwd.length - 1];
+    } else {
+        var folder = get_path();
+    }
+
+    var users = prompt("Enter comma separated list of users. empty = public", "");
+    if (users === null)
+        return;
+    var password = prompt("Enter a passcode", "");
+    if (password === null)
+        return;
+
+
+    var data = new FormData();
+    data.append('folder', folder);
+    data.append('filename', filename);
+    data.append('users', users);
+    data.append('password', password);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/php/share.php', true);
+    xhr.onload = function () {
     }
 
     xhr.send(data);
@@ -228,8 +262,8 @@ function opendir() {
     };
     xhr.send(data);
 
-    focus.filecontents.style.display   = 'none';
-    focus.foldercontents.style.display = 'block';
+    focus.filecontentsroot.style.display = 'none';
+    focus.foldercontents.style.display   = 'block';
 }
 
 function openfile(is_directory) {
@@ -430,11 +464,11 @@ function make_window(pwd) {
     path.classList.add('path');
     h2.appendChild(path);
 
-    wnd_html.style.width    = "800px";
+    wnd_html.style.width    = "900px";
     wnd_html.style.height   = "600px";
     wnd_html.style.position = "absolute";
-    wnd_html.style.left     = "300px";
-    wnd_html.style.top      = "300px";
+    wnd_html.style.left     = "200px";
+    wnd_html.style.top      = "100px";
 
     wnd.visuals = wnd_html;
 
@@ -470,9 +504,34 @@ function make_window(pwd) {
     }
 
     {
+        wnd.filecontentsroot = document.createElement('div');
+        wnd_html.appendChild(wnd.filecontentsroot);
+
+        var h3 = document.createElement('h3');
+        wnd.filecontentsroot.appendChild(h3);
+
+        var download_btn = document.createElement('button');
+        download_btn.innerText = "Download";
+        download_btn.onclick = () => { download_file(); }
+        h3.appendChild(download_btn);
+
+        separator = document.createElement('div');
+        separator.classList.add('separator');
+        h3.appendChild(separator);
+
+        var download_btn = document.createElement('button');
+        download_btn.innerText = "Share";
+        download_btn.onclick = () => { share(true); }
+        h3.appendChild(download_btn);
+
+        separator = document.createElement('div');
+        separator.classList.add('separator');
+        h3.appendChild(separator);
+
         wnd.filecontents = document.createElement('div');
         wnd.filecontents.classList.add('filecontents');
-        wnd_html.appendChild(wnd.filecontents);
+        wnd.filecontentsroot.appendChild(wnd.filecontents);
+
     }
 
     document.body.appendChild(wnd_html);
@@ -523,7 +582,7 @@ function add_file_visuals(fileview) {
             } else if (!is_trash) {
                 context_list.push(
                     ['Rename', () => { rename_file(fileview.filename); }],
-                    ['Share',  () => {alert('not implemented')}],
+                    ['Share',  () => { share(false, fileview.filename); }],
                     ['Delete', () => { move_to_trash(fileview.filename); }]
                 );
             }
