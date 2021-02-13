@@ -581,6 +581,7 @@ function make_share_window(folder, filename) {
         form_data.append('folder', folder);
         form_data.append('filename', filename);
         form_data.append('users', users);
+        form_data.append('permissions', data.write_permissions ? 3 : 1);
         form_data.append('password', data.has_password ? data.password : "");
 
         var xhr = new XMLHttpRequest();
