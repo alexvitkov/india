@@ -13,9 +13,15 @@ var focus = null;
 
 var context_menu = null;
 var dragging = null;
+
+var dragging_candidate = null;
+var dragging_candidate_x, dragging_candidate_y;
+
 var dragging_fileview;
 var dragging_placeholder = null;
 var dragging_offset_x = 0, dragging_offset_y = 0;
+
+var depth = 20;
 
 class FileView {
     constructor(filename, visuals, mimetype, is_directory) {
@@ -126,19 +132,14 @@ function update_path_visuals() {
         var d;
         if (i >= 0) {
             d = focus.pwd[i];
-            var separator_div = document.createElement('div');
-            separator_div.classList.add('separator');
-            the_path.appendChild(separator_div);
+            var separator_div = mk(the_path, 'div', 'separator');
             separator_div.innerText = "»";
         }
         else
             d = "Root";
 
-
-        var entry = document.createElement('button');
-        entry.classList.add('pathentry');
+        var entry = mk(the_path, 'button', 'pathentry');
         entry.innerText = d;
-        the_path.appendChild(entry);
 
         add_link_functionality(entry, i + 1);
     }
@@ -201,26 +202,8 @@ function share(in_file, filename) {
         var folder = get_path();
     }
 
-    var users = prompt("Enter comma separated list of users. empty = public", "");
-    if (users === null)
-        return;
-    var password = prompt("Enter a passcode", "");
-    if (password === null)
-        return;
-
-
-    var data = new FormData();
-    data.append('folder', folder);
-    data.append('filename', filename);
-    data.append('users', users);
-    data.append('password', password);
-
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', '/php/share.php', true);
-    xhr.onload = function () {
-    }
-
-    xhr.send(data);
+    var wnd = make_share_window(folder, filename);
+    focus_window(wnd);
 }
 
 function opendir() {
@@ -355,25 +338,24 @@ function begin_drag_fileview(e, fileview) {
     if (dragging)
         end_drag();
 
+    // Inserted in place by begin_drag
     dragging_placeholder = document.createElement('div');
     dragging_fileview = fileview;
 
     dragging = fileview.visuals;
+    dragging.style.zIndex = 50000;
 
-    // document.body.appendChild(dragging);
-
-    begin_drag(e, fileview.visuals,);
+    begin_drag(e, fileview.visuals);
 }
 
-function begin_drag(e, obj) {
-
+function begin_drag(e, obj, dont_set_width) {
     dragging = obj;
+    dragging_candidate = null;
     dragging.classList.add("dragged");
 
     var elemRect = dragging.getBoundingClientRect();
     dragging_offset_x = e.clientX - elemRect.left;
     dragging_offset_y = -e.clientY + elemRect.top;
-
 
     if (dragging_placeholder)
         obj.parentNode.insertBefore(dragging_placeholder, obj);
@@ -381,8 +363,10 @@ function begin_drag(e, obj) {
     dragging.style.left = (e.clientX - dragging_offset_x) + "px";
     dragging.style.top  = (e.clientY + dragging_offset_y) + "px";
 
-    dragging.style.width  = elemRect.width  + "px";
-    dragging.style.height = elemRect.height + "px";
+    if (!dont_set_width) {
+        dragging.style.width  = elemRect.width  + "px";
+        dragging.style.height = elemRect.height + "px";
+    }
 
     dragging.style.position = "absolute";
     document.body.appendChild(dragging);
@@ -444,97 +428,226 @@ class Window {
     }
 }
 
+function focus_window(wnd) {
+    if (focus)
+        focus.visuals.classList.remove('focus');
+    focus = wnd;
+    if (wnd) {
+        wnd.visuals.classList.add('focus');
+        wnd.visuals.style.zIndex = depth ++;
+    }
+}
 
-function make_window(pwd) {
+function make_window_base(pwd, x, y, w, h) {
     var wnd = new Window(pwd);
     windows.push(wnd);
 
-    var wnd_html = document.createElement('div');
-    wnd_html.classList.add('window');
+    wnd.visuals = mk(document.body, 'div', 'window');
 
-    var h2 = document.createElement('h2');
-    wnd_html.appendChild(h2);
+    wnd.visuals.style.width    = w + "px";
+    wnd.visuals.style.height   = h ? (h + "px") : "unset";
+    wnd.visuals.style.position = "absolute";
+    wnd.visuals.style.left     = x + "px";
+    wnd.visuals.style.top      = y + "px";
 
-    //h2.onmousedown = (e) => {
-    //begin_drag(e, wnd_html);
-    // e.preventDefault();
-    //};
+    wnd.h2 = mk(wnd.visuals, 'h2');
 
-    path = document.createElement('div');
-    path.classList.add('path');
-    h2.appendChild(path);
+    wnd.visuals.onmousedown = (e) => { 
+        focus_window(wnd); 
+    }
 
-    wnd_html.style.width    = "900px";
-    wnd_html.style.height   = "600px";
-    wnd_html.style.position = "absolute";
-    wnd_html.style.left     = "200px";
-    wnd_html.style.top      = "100px";
+    wnd.h2.onmousedown = (e) => {
+        if (!dragging) {
+            dragging_candidate = wnd.visuals;
+            dragging_candidate_x = e.clientX;
+            dragging_candidate_y = e.clientY;
+        }
+    };
 
-    wnd.visuals = wnd_html;
+    return wnd;
+}
+
+function mk(parent, type, _class) {
+    var el = document.createElement(type);
+    parent.appendChild(el);
+    if (_class)
+        el.classList.add(_class);
+    return el;
+}
+
+function mkhdiv(parent) {
+    var hdiv = mk(parent, 'div');
+    hdiv.style.display = "flex";
+    hdiv.style.alignItems = "center";
+    hdiv.style.padding = "0.3rem";
+    hdiv.style.gap = "0.3rem";
+    return hdiv;
+}
+
+function mkcheckbox(parent, label, togglefn) {
+    var hdiv = mkhdiv(parent);
+
+    var write_checkbox = mk(hdiv, 'input');
+    write_checkbox.type = 'checkbox';
+
+    var write_checkbox_label = mk(hdiv, 'label');
+    write_checkbox_label.innerText = label;
+    write_checkbox_label.onclick = (e) => { write_checkbox.click(); }
+    write_checkbox_label.classList.add('noselect');
+
+    write_checkbox.onchange = (_e) => {
+        togglefn(write_checkbox.checked);
+    };
+}
+
+function make_share_window(folder, filename) {
+    var wnd = make_window_base(null, 400, 400, 400, 0);
+
+    wnd.h2.innerText = "Share " + filename;
+    wnd.h2.style.padding = "0.2rem 0.4rem";
+
+    wnd.foldercontents = mk(wnd.visuals, 'div', 'share_dialog_contents');
+    wnd.foldercontents.style.padding = "0.5rem";
+
+    var data = {
+        write_permissions: false,
+        private: false,
+        has_password: false,
+        password: "",
+        userlist: [],
+    }
+
+    var userlist, add_user;
+    mkcheckbox(wnd.foldercontents, "Private link", (toggled) => {
+        add_user.style.display = toggled ? "block" : "none";
+        userlist.style.display = toggled ? "block" : "none";
+        data.private = toggled;
+    });
+
+    userlist = mk(wnd.foldercontents, 'div');
+    userlist.style.display = "none";
+    add_user = mk(wnd.foldercontents, 'button');
+    add_user.innerText = "Add user";
+    add_user.style.display = "none";
+
+    add_user.onclick = (e) => {
+        var i = mk(userlist, 'input');
+        i.value = 'John Doe';
+
+        let index = data.userlist.length;
+        data.userlist.push(i.value);
+
+        i.onchange = (e) => {
+            data.userlist[index] = i.value;
+        }
+    }
+
+    // Click the add_user to add a default user
+    add_user.click();
+
+    mkcheckbox(wnd.foldercontents, "Give write permissions", (toggled) => {
+        data.write_permissions = toggled;
+    });
+
+    let password_container;
+    mkcheckbox(wnd.foldercontents, "Password protected", (toggled) => {
+        data.has_password = toggled;
+        password_container.style.display = toggled ? "flex" : "none";
+    });
+
+    password_container = mkhdiv(wnd.foldercontents);
+    password_container.style.display = 'none'
+    var password_label = mk(password_container, 'label');
+    password_label.innerText = "Password";
+    var password_input = mk(password_container, 'input');
+    password_input.type = 'password';
+    password_input.style.flex = "1 0 0";
+    password_input.onchange = (_e) => {
+        data.password = password_input.value;
+    };
+
+    var generate_url_button = mk(wnd.foldercontents, 'button');
+    generate_url_button.innerText = "Generate link";
+
+    generate_url_button.onclick = () => {
+        console.log(data);
+
+        var users = "";
+        if (data.private) {
+            users = data.userlist.join(',');
+        }
+
+        var form_data = new FormData();
+        form_data.append('folder', folder);
+        form_data.append('filename', filename);
+        form_data.append('users', users);
+        form_data.append('password', data.has_password ? data.password : "");
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/php/share.php', true);
+        xhr.onload = function () {
+            alert(xhr.response);
+        }
+
+        xhr.send(form_data);
+        delete_window();
+    }
+
+    return wnd;
+}
+
+function delete_window() {
+    var index = windows.indexOf(focus);
+    if (index >= 0) {
+        windows.splice(index, 1);
+    }
+    focus.visuals.parentNode.removeChild(focus.visuals);
+    fous = null;
+}
+
+function make_window(pwd) {
+    var wnd = make_window_base(pwd, 100, 100, 800, 600);
+
+    path = mk(wnd.h2, 'div', 'path');
 
     {
-        wnd.foldercontents = document.createElement('div');
-        wnd.foldercontents.classList.add('foldercontents');
-        wnd_html.appendChild(wnd.foldercontents);
+        wnd.foldercontents = mk(wnd.visuals, 'div', 'foldercontents');
+        var h3 = mk(wnd.foldercontents, 'h3');
 
-        var h3 = document.createElement('h3');
-        wnd.foldercontents.appendChild(h3);
-
-        var upload_btn = document.createElement('button');
+        var upload_btn = mk(h3, 'button');
         upload_btn.innerText = "Upload";
         upload_btn.onclick = () => { begin_upload(); }
-        h3.appendChild(upload_btn);
 
-        var separator = document.createElement('div');
-        separator.classList.add('separator');
-        h3.appendChild(separator);
+        mk(h3, 'div', 'separator');
 
-        var new_folder_btn = document.createElement('button');
+        var new_folder_btn = mk(h3, 'button');
         new_folder_btn.innerText = "New Folder";
         new_folder_btn.onclick = () => { new_folder(); }
-        h3.appendChild(new_folder_btn);
 
-        separator = document.createElement('div');
-        separator.classList.add('separator');
-        h3.appendChild(separator);
+        mk(h3, 'div', 'separator');
 
-        wnd.filegrid = document.createElement('div');
-        wnd.filegrid.classList.add('files');
-        wnd.foldercontents.appendChild(wnd.filegrid);
+        wnd.filegrid = mk(wnd.foldercontents, 'div', 'files');
     }
 
     {
-        wnd.filecontentsroot = document.createElement('div');
-        wnd_html.appendChild(wnd.filecontentsroot);
+        wnd.filecontentsroot = mk(wnd.visuals, 'div');
+        var h3 = mk(wnd.filecontentsroot, 'h3');
 
-        var h3 = document.createElement('h3');
-        wnd.filecontentsroot.appendChild(h3);
-
-        var download_btn = document.createElement('button');
+        var download_btn = mk(h3, 'button');
         download_btn.innerText = "Download";
         download_btn.onclick = () => { download_file(); }
-        h3.appendChild(download_btn);
 
-        separator = document.createElement('div');
-        separator.classList.add('separator');
-        h3.appendChild(separator);
+        mk(h3, 'div', 'separator');
 
-        var download_btn = document.createElement('button');
+        var download_btn = mk(h3, 'button');
         download_btn.innerText = "Share";
         download_btn.onclick = () => { share(true); }
-        h3.appendChild(download_btn);
+        
+        mk(h3, 'div', 'separator');
 
-        separator = document.createElement('div');
-        separator.classList.add('separator');
-        h3.appendChild(separator);
-
-        wnd.filecontents = document.createElement('div');
-        wnd.filecontents.classList.add('filecontents');
-        wnd.filecontentsroot.appendChild(wnd.filecontents);
-
+        wnd.filecontents = mk(wnd.filecontentsroot, 'div', 'filecontents');
     }
 
-    document.body.appendChild(wnd_html);
     return wnd;
 }
 
@@ -545,7 +658,7 @@ function add_file_visuals(fileview) {
     // Is the current filewview the trash folder itself
     var is_trash    = focus.pwd.length == 0 && fileview.filename == "trash";
 
-    var visuals = document.createElement('div');
+    var visuals = mk(focus.filegrid, 'div');
     fileview.visuals = visuals;
 
     var img = document.createElement('img');
@@ -560,7 +673,7 @@ function add_file_visuals(fileview) {
         img.src=`/mimeicons/${fileview.mimetype.replace("/", "-")}.png`;
     }
 
-    visuals.onclick = () => {
+    fileview.visuals.onclick = () => {
         focus.pwd.push(fileview.filename);
         openfile(fileview.is_directory);
     }
@@ -625,7 +738,6 @@ function add_file_visuals(fileview) {
     visuals.appendChild(img);
     visuals.appendChild(filename);
 
-    focus.filegrid.appendChild(visuals);
 }
 
 function begin_upload() {
@@ -636,8 +748,11 @@ function context(e, entries) {
     if (context_menu)
         context_menu.remove();
 
-    context_menu = document.createElement('ul');
-    context_menu.classList.add('context');
+    context_menu = mk(document.body, 'ul', 'context');
+
+    context_menu.onmousedown = (e) => {
+        e.stopPropagation();
+    }
 
     context_menu.style.left = e.clientX + "px";
     context_menu.style.top  = e.clientY + "px";
@@ -648,8 +763,6 @@ function context(e, entries) {
         li.onclick = e[1];
         context_menu.appendChild(li);
     }
-
-    document.body.appendChild(context_menu);
 }
 
 function get_path(max_length) {
@@ -684,9 +797,21 @@ document.body.onmousemove = (e) => {
         dragging.style.left = (e.clientX - dragging_offset_x) + "px";
         dragging.style.top  = (e.clientY + dragging_offset_y) + "px";
     }
+    else if (dragging_candidate) {
+        var d = Math.abs(e.clientX - dragging_candidate_x) + Math.abs(e.clientY - dragging_candidate_y);
+        if (d > 15)
+            begin_drag(e, dragging_candidate, true);
+    }
+}
+
+document.body.onmousedown = (_e) => {
+    if (context_menu)
+        context_menu.remove();
 }
 
 document.body.onmouseup = (_e) => {
+    if (dragging_candidate)
+        dragging_candidate = null;
     if (dragging)
         end_drag();
 }
@@ -700,7 +825,6 @@ document.body.oncontextmenu = (e) => {
         context_menu.remove();
 }
 
-
 var root_window = make_window([]);
-focus = root_window;
+focus_window(root_window);
 openfile(true);
