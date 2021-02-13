@@ -104,7 +104,7 @@ function openfile_nondir() {
 
     xhr.open('POST', '/php/readfile.php', true);
 
-    focus.filecontents.innerText = "Loading...";
+    focus.filecontents.innerText = "";
     focus.filecontents.style.display = 'block';
     focus.foldercontents.style.display = 'none';
 
@@ -457,6 +457,10 @@ function add_file_visuals(fileview) {
     }
 
     visuals.ondragstart = (e) => {
+        if (focus.pwd.length == 0 && fileview.filename == "trash") {
+            e.preventDefault();
+            return;
+        }
         begin_drag_fileview(e, fileview);
         e.preventDefault();
     };
