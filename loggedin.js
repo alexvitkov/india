@@ -247,6 +247,19 @@ function add_link_functionality(link, length) {
 
 add_link_functionality(document.getElementById("home_path_entry"), 0);
 
+function open_file(fileview) {
+    var data = new FormData();
+    data.append('folder', get_path());
+    data.append('path', get_path());
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/php/readfile.php', true);
+    xhr.onload = function () {
+
+    };
+    xhr.send(data);
+}
+
 function add_file_visuals(fileview) {
     var visuals = document.createElement('div');
     fileview.visuals = visuals;
@@ -262,16 +275,20 @@ function add_file_visuals(fileview) {
         }
     } else {
         img.src=`/mimeicons/${fileview.mimetype.replace("/", "-")}.png`;
+        visuals.onclick = () => {
+            open_file(fileview);
+        }
     }
 
     visuals.oncontextmenu = (e) => {
         if (!dragging) {
             context(e, [
                 ['Open', () => {
-                    if (fileview.is_directory) { pwd.push(fileview.filename);
+                    if (fileview.is_directory) { 
+                        pwd.push(fileview.filename);
                         load_dir();
                     } else {
-                        alert('not implemented');
+                        open_file(fileview);
                     }
                 }],
                 ['Rename', () => { rename_file(fileview.filename); }],
@@ -342,7 +359,7 @@ function get_path(max_length) {
     for (let i = 0; i < max_length; i++) {
         path += pwd[i];
         if (i != max_length - 1)
-            path + "/";
+            path += "/";
     }
     return path;
 }
