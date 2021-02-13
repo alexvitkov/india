@@ -5,6 +5,6 @@
 // which will log the user out of our webpage
 
 session_start();
-unset($_SESSION['username']);
+unset($_SESSION['user_object']);
 header('Location: /');
 ?>

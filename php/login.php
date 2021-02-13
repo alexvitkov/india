@@ -13,14 +13,12 @@ if(gettype($username)!="string" || gettype($password)!="string")
 	die("You didn't specify the pass or the username");
 }
 
-$database=new Database();
 $user=$database->authenticate($username,$password);
 if(!$user)
 {
 	die("Password or username is incorrect");
 }
 
-$_SESSION['username'] = $user->username;
 $_SESSION['user_object'] = $user;
 
 header('Location: /');

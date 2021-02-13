@@ -1,4 +1,5 @@
 <?php
+    require_once "php/user.php";
     session_start();
 ?>
 <!DOCTYPE html>
@@ -20,9 +21,15 @@
                     <div style="flex: 1 0 0;"></div>
                     <ul id="topmenu">
 
-                    <?php if (array_key_exists("username", $_SESSION)) { ?>
+                    <?php if (array_key_exists("user_object", $_SESSION)) { ?>
                         
-                        <li><?php echo $_SESSION['username'];?></li>
+                        <li>
+			<?php 
+				$user=$_SESSION['user_object'];
+				error_log($user->username);
+				echo $user->username;
+			?>
+				</li>
                         <li onclick="window.location.href='/php/logout.php'">Sign out</li>
 
                     <?php } else {?>
@@ -38,7 +45,7 @@
                 <div id="page">
 
 <?php
-    if (array_key_exists("username", $_SESSION)) {
+    if (array_key_exists("user_object", $_SESSION)) {
         require_once("loggedin.php");
     } else {
         require_once("loginregister.php");
