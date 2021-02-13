@@ -267,7 +267,6 @@ input[type=submit]:hover {
 }
 
 .window {
-	background: #fafafa;
 	margin: 0rem;
 	padding: 0;
 	box-shadow: 0 0.8rem 1.3rem rgba(0,0,0,0.2);
@@ -280,6 +279,15 @@ input[type=submit]:hover {
     left: 0;
     width: 800px;
     height: 600px;
+    
+    transition: opacity 0.3s;
+    display: flex;
+    flex-direction: column;
+}
+
+.foldercontents, .filecontents {
+	background: rgba(250, 250, 250, .8);
+    flex: 1 0 0;
 }
 
 .window h3,
@@ -287,10 +295,7 @@ input[type=submit]:hover {
 	color: #4d4d4d;
 	background: #f0f0f0;
 	margin: 0;
-	border-top-left-radius: 0.5rem;
-	border-top-right-radius: 0.5rem;
 
-    cursor: grab;
 
     display: flex;
     align-items: stretch;
@@ -301,10 +306,17 @@ input[type=submit]:hover {
 
 .window > h2 {
     font-size: 1.3rem;
+	border-top-left-radius: 0.5rem;
+	border-top-right-radius: 0.5rem;
+    cursor: grab;
 }
 
 .window h3 {
     font-size: 1.2rem;
+}
+
+.window.dragged {
+    opacity: 0.9;
 }
 
 .files {
@@ -327,7 +339,7 @@ input[type=submit]:hover {
     display: flex;
     flex-direction: column;
     align-items: center;
-    border: 1px solid #fafafa;
+    border: 1px solid rgba(0,0,0,0);
     border-radius: 0.1rem;
 }
 
@@ -337,7 +349,7 @@ input[type=submit]:hover {
 }
 
 .file:hover:not(.dragged) {
-    background: white;
+    background: rgba(255,255,255, 0.5);
     color: black;
     border-color: #ddd;
 }
@@ -395,4 +407,16 @@ input[type=submit]:hover {
 .context > li:hover {
     background: #2e91db;
     color: white;
+}
+
+.backdrop {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    background-image: url("/img/backdrop.jpg");
+    background-size: cover;
 }

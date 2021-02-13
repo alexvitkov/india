@@ -210,8 +210,7 @@ function move_file(new_folder, filename) {
     xhr.send(data);
 }
 
-function new_folder() {
-    var dirname = prompt(`Directory name`, "New Folder");
+function new_folder() { var dirname = prompt(`Directory name`, "New Folder");
     if (!dirname)
         return;
 
@@ -330,8 +329,7 @@ function make_window(pwd) {
     h2.onmousedown = (e) => {
         begin_drag(e, wnd_html);
         e.preventDefault();
-   };
-
+    };
 
     path = document.createElement('div');
     path.classList.add('path');
@@ -347,6 +345,7 @@ function make_window(pwd) {
 
     {
         wnd.foldercontents = document.createElement('div');
+        wnd.foldercontents.classList.add('foldercontents');
         wnd_html.appendChild(wnd.foldercontents);
 
         var h3 = document.createElement('h3');
