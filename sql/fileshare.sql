@@ -54,16 +54,19 @@ create table trash (
 );
 
 
-/*
 create trigger delete_on_zero_links
 	after delete
 	on node_links
-	for each row
-		insert into trash(node_id) 
-				select 
-				if(old.node_id not in (select node_id from node_links), 
-						old.node_id,
-						select node_id from nodes where 1=0
-				);
+	for each row 
+		insert into trash
+		select nodes.node_id
+		from nodes
+		where nodes.node_id not in (select node_id from node_links) and nodes.node_id=old.node_id;
 			
-*/
+		/*
+create trigger delete_links
+	after delete
+	on nodes
+	for each row
+		delete from 
+		*/
