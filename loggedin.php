@@ -1,5 +1,5 @@
 <div>
-    <div class="filesystem">
+    <div class="window" id="root_window">
         <h2 style="display: flex; gap: 0rem;">
             <button id="upload_btn" onclick="begin_upload()">Upload</button>
             <div class="separator"></div>
@@ -7,11 +7,8 @@
             <div class="separator"></div>
             <div class="path" id="the_path">
                 <button class="pathentry" id="home_path_entry">
-		<?php
-		$user=$_SESSION['user_object'];
-		echo $user->username;
-	       	?>
-		's files</button>
+                    <?php echo $_SESSION['user_object']->username; ?>'s files
+                </button>
             </div>
         </h2>
 

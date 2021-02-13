@@ -141,7 +141,6 @@ form > .content {
 	justify-content: center;
 }
 
-.filesystem > h2,
 form > h2 {
 	color: #4d4d4d;
 	margin: 0;
@@ -152,10 +151,30 @@ form > h2 {
 	border-top-right-radius: 0.5rem;
 }
 
+
+.window > h2 button {
+    border: none;
+    padding: 0.3rem 1rem;
+    background: inherit;
+    border-radius: 0;
+}
+
+.window > h2 button:not(.pathentry):hover {
+    background: white;
+}
+
+.window > h2 > .separator {
+    flex: 0 0 1px;
+    align-self: stretch;
+    background: #bbb;
+}
+
+.window > h2 > *:first-child {
+	border-top-left-radius: 0.5rem;
+}
 form p {
 	margin: 1rem 0px 0.3rem 0px;
 }
-
 
 .hero_form_error {
 	animation: fadein 0.2s;
@@ -241,16 +260,39 @@ input[type=submit]:hover {
     display: none;
 }
 
-.filesystem {
+.window {
 	background: #fafafa;
-	margin: 1rem;
+	margin: 0rem;
 	padding: 0;
 	box-shadow: 0 0.8rem 1.3rem rgba(0,0,0,0.2);
 	border-radius: 0.5rem;
 	border: 1px solid #b9b9b9;
 
     display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 800px;
+    height: 600px;
 }
+
+.window > h2 {
+	color: #4d4d4d;
+	background: #f0f0f0;
+	margin: 0;
+	border-top-left-radius: 0.5rem;
+	border-top-right-radius: 0.5rem;
+
+    cursor: grab;
+
+    display: flex;
+    align-items: stretch;
+    font-weight: normal;
+    padding: 0rem;
+    border-bottom: 1px solid #bbb;
+    font-size: 1.3rem;
+}
+
 
 .files {
     padding: 0.3rem;
@@ -297,35 +339,6 @@ input[type=submit]:hover {
     filter: brightness(120%);
 }
 
-.filesystem > h2 {
-    display: flex;
-    align-items: stretch;
-    font-weight: normal;
-    padding: 0rem;
-    border-bottom: 1px solid #bbb;
-    font-size: 1.3rem;
-}
-
-.filesystem > h2 button {
-    border: none;
-    padding: 0.3rem 1rem;
-    background: inherit;
-    border-radius: 0;
-}
-
-.filesystem > h2 button:not(.pathentry):hover {
-    background: white;
-}
-
-.filesystem > h2 > .separator {
-    flex: 0 0 1px;
-    align-self: stretch;
-    background: #bbb;
-}
-
-.filesystem > h2 > *:first-child {
-	border-top-left-radius: 0.5rem;
-}
 
 .path {
     display: flex;

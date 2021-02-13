@@ -182,39 +182,61 @@ function new_folder() {
     xhr.send(data);
 }
 
-function begin_drag(e, fileview) {
+function begin_drag_fileview(e, fileview) {
     if (dragging)
         end_drag();
 
     dragging_placeholder = document.createElement('div');
-    fileview.visuals.parentNode.insertBefore(dragging_placeholder, fileview.visuals);
+    dragging_fileview = fileview;
 
     dragging = fileview.visuals;
-    dragging_fileview = fileview;
+
+    // document.body.appendChild(dragging);
+
+    begin_drag(e, fileview.visuals,);
+}
+
+function begin_drag(e, obj) {
+
+    dragging = obj;
     dragging.classList.add("dragged");
 
     var elemRect = dragging.getBoundingClientRect();
+    dragging_offset_x = e.clientX - elemRect.left;
+    dragging_offset_y = -e.clientY + elemRect.top;
+    
 
-    dragging_offset_x = elemRect.width - (elemRect.left - e.clientX);
-    dragging_offset_y = elemRect.top  - e.clientY;
-
-    dragging.style.position = "absolute";
-    dragging.style.width  = elemRect.width  + "px";
-    dragging.style.height = elemRect.height + "px";
-    document.body.appendChild(dragging);
+    console.log(elemRect);
+    console.log(e.clientY, elemRect.top);
+    if (dragging_placeholder)
+        obj.parentNode.insertBefore(dragging_placeholder, obj);
 
     dragging.style.left = (e.clientX - dragging_offset_x) + "px";
     dragging.style.top  = (e.clientY + dragging_offset_y) + "px";
+
+    dragging.style.width  = elemRect.width  + "px";
+    dragging.style.height = elemRect.height + "px";
+
+    dragging.style.position = "absolute";
+    document.body.appendChild(dragging);
 }
 
-function end_drag(e) {
-    dragging_placeholder.parentNode.insertBefore(dragging, dragging_placeholder);
-    dragging_placeholder.remove();
-    dragging.style.removeProperty("position");
-    dragging.style.removeProperty("width");
-    dragging.style.removeProperty("height");
-    dragging.style.removeProperty("left");
-    dragging.style.removeProperty("top");
+function end_drag(_e) {
+    if (dragging_placeholder) {
+        dragging_placeholder.parentNode.insertBefore(dragging, dragging_placeholder);
+        dragging_placeholder.remove();
+        dragging_placeholder = null;
+    }
+
+    if (dragging_fileview) {
+        dragging.style.removeProperty("position");
+        dragging.style.removeProperty("width");
+        dragging.style.removeProperty("height");
+        dragging.style.removeProperty("left");
+        dragging.style.removeProperty("top");
+        dragging_fileview = null;
+    }
+
     dragging.classList.remove("dragged");
     dragging = null;
 }
@@ -301,7 +323,7 @@ function add_file_visuals(fileview) {
     }
 
     visuals.ondragstart = (e) => {
-        begin_drag(e, fileview);
+        begin_drag_fileview(e, fileview);
         e.preventDefault();
     };
 
@@ -397,5 +419,15 @@ document.body.oncontextmenu = (e) => {
     if (context_menu)
         context_menu.remove();
 }
+
+function init_window(wnd) {
+    var h2 = wnd.getElementsByTagName("h2")[0];
+    h2.onmousedown = (e) => {
+        begin_drag(e, wnd);
+        e.preventDefault();
+    };
+}
+
+init_window(document.getElementById("root_window"));
 
 load_dir();
