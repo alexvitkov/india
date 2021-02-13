@@ -63,6 +63,59 @@ function on_file_added(_e) {
     }
 }
 
+// https://stackoverflow.com/questions/7370943/retrieving-binary-file-content-using-javascript-base64-encode-it-and-reverse-de
+function base64ArrayBuffer(arrayBuffer) {
+  var base64    = ''
+  var encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+
+  var bytes         = new Uint8Array(arrayBuffer)
+  var byteLength    = bytes.byteLength
+  var byteRemainder = byteLength % 3
+  var mainLength    = byteLength - byteRemainder
+
+  var a, b, c, d
+  var chunk
+
+  // Main loop deals with bytes in chunks of 3
+  for (var i = 0; i < mainLength; i = i + 3) {
+    // Combine the three bytes into a single integer
+    chunk = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2]
+
+    // Use bitmasks to extract 6-bit segments from the triplet
+    a = (chunk & 16515072) >> 18 // 16515072 = (2^6 - 1) << 18
+    b = (chunk & 258048)   >> 12 // 258048   = (2^6 - 1) << 12
+    c = (chunk & 4032)     >>  6 // 4032     = (2^6 - 1) << 6
+    d = chunk & 63               // 63       = 2^6 - 1
+
+    // Convert the raw binary segments to the appropriate ASCII encoding
+    base64 += encodings[a] + encodings[b] + encodings[c] + encodings[d]
+  }
+
+  // Deal with the remaining bytes and padding
+  if (byteRemainder == 1) {
+    chunk = bytes[mainLength]
+
+    a = (chunk & 252) >> 2 // 252 = (2^6 - 1) << 2
+
+    // Set the 4 least significant bits to zero
+    b = (chunk & 3)   << 4 // 3   = 2^2 - 1
+
+    base64 += encodings[a] + encodings[b] + '=='
+  } else if (byteRemainder == 2) {
+    chunk = (bytes[mainLength] << 8) | bytes[mainLength + 1]
+
+    a = (chunk & 64512) >> 10 // 64512 = (2^6 - 1) << 10
+    b = (chunk & 1008)  >>  4 // 1008  = (2^6 - 1) << 4
+
+    // Set the 2 least significant bits to zero
+    c = (chunk & 15)    <<  2 // 15    = 2^4 - 1
+
+    base64 += encodings[a] + encodings[b] + encodings[c] + '='
+  }
+
+  return base64
+}
+
 function update_path_visuals() {
     var the_path = focus.visuals.getElementsByClassName('path')[0];
 
@@ -92,6 +145,16 @@ function update_path_visuals() {
 }
 
 function openfile_nondir() {
+    var mimetype = "text/plain";
+
+    for (const f of files) {
+        if (f.filename == focus.pwd[focus.pwd.length - 1])
+            mimetype = f.mimetype;
+    }
+
+    while (focus.filecontents.children.length > 0)
+        focus.filecontents.removeChild(focus.filecontents.lastChild);
+
     var data = new FormData();
     data.append('folder', get_path(focus.pwd.length - 1));
     data.append('filename', focus.pwd[focus.pwd.length - 1]);
@@ -104,13 +167,25 @@ function openfile_nondir() {
 
     xhr.open('POST', '/php/readfile.php', true);
 
-    focus.filecontents.innerText = "Loading...";
+    focus.filecontents.innerText = "";
     focus.filecontents.style.display = 'block';
     focus.foldercontents.style.display = 'none';
 
-    xhr.onload = function () {
-        focus.filecontents.innerText = xhr.responseText;
-    };
+    if (mimetype.split("/")[0] == "image") {
+        xhr.responseType = 'arraybuffer';
+        xhr.onload = function () {
+            var b = base64ArrayBuffer(xhr.response);
+            var image = new Image();
+            image.src = `data:image/png;base64,${b}`;
+            focus.filecontents.appendChild(image);
+        }
+    }
+    else {
+        xhr.onload = function () {
+            focus.filecontents.innerText = xhr.responseText;
+        };
+    }
+
     xhr.send(data);
 }
 
@@ -169,11 +244,18 @@ function move_to_trash(filename) {
     move_file("/trash", filename, path_combine(get_path(), filename));
 }
 
-function delete_file(filename) {
-    var file_full_path = path_combine(get_path(), filename);
+function restore_from_trash(filename) {
+    var split = filename.split("/");
+    var new_filename = split.pop();
+    var new_directory = "/" + split.join("/");
 
+    move_file(new_directory, filename, new_filename);
+}
+
+function delete_file(filename) {
     var data = new FormData();
-    data.append('path', file_full_path);
+    data.append('folder', get_path());
+    data.append('filename', filename);
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/delete.php', true);
@@ -340,8 +422,8 @@ function make_window(pwd) {
     wnd_html.appendChild(h2);
 
     //h2.onmousedown = (e) => {
-        //begin_drag(e, wnd_html);
-        // e.preventDefault();
+    //begin_drag(e, wnd_html);
+    // e.preventDefault();
     //};
 
     path = document.createElement('div');
@@ -399,6 +481,11 @@ function make_window(pwd) {
 
 
 function add_file_visuals(fileview) {
+    // Are we in a subdirectory of the trash folder
+    var is_in_trash = focus.pwd.length > 0 && focus.pwd[0] == "trash";
+    // Is the current filewview the trash folder itself
+    var is_trash    = focus.pwd.length == 0 && fileview.filename == "trash";
+
     var visuals = document.createElement('div');
     fileview.visuals = visuals;
 
@@ -421,22 +508,37 @@ function add_file_visuals(fileview) {
 
     visuals.oncontextmenu = (e) => {
         if (!dragging) {
-            context(e, [
+
+            var context_list = [
                 ['Open', () => {
                     focus.pwd.push(fileview.filename);
                     openfile(fileview.is_directory);
-                }],
+                }], 
                 ['Open in New Window', () => {alert('not implemented')}],
-                ['Rename', () => { rename_file(fileview.filename); }],
-                ['Share',  () => {alert('not implemented')}],
-                ['Delete', () => { move_to_trash(fileview.filename); }],
-            ]);
+            ];
+
+            if (is_in_trash) {
+                context_list.push(['Restore', () => {  restore_from_trash(fileview.filename); }]);
+                context_list.push(['Delete forever', () => { delete_file(fileview.filename); }]);
+            } else if (!is_trash) {
+                context_list.push(
+                    ['Rename', () => { rename_file(fileview.filename); }],
+                    ['Share',  () => {alert('not implemented')}],
+                    ['Delete', () => { move_to_trash(fileview.filename); }]
+                );
+            }
+
+            context(e, context_list);
         }
         e.preventDefault();
         e.stopPropagation();
     }
 
     visuals.ondragstart = (e) => {
+        if (is_trash || is_in_trash) {
+            e.preventDefault();
+            return;
+        }
         begin_drag_fileview(e, fileview);
         e.preventDefault();
     };
@@ -451,10 +553,15 @@ function add_file_visuals(fileview) {
 
     visuals.classList.add('file');
     filename.classList.add('filename');
-    filename.innerText = fileview.filename;
 
-    if (fileview.mimetype == "pending")
-        visuals.classList.add('pending');
+    if (is_in_trash) {
+        var split = fileview.filename.split("/");
+        filename.innerText = split[split.length - 1];
+    } else if (is_trash) {
+        filename.innerText = "Trash";
+    } else {
+        filename.innerText = fileview.filename;
+    }
 
     visuals.appendChild(img);
     visuals.appendChild(filename);
