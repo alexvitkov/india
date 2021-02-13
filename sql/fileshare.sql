@@ -24,7 +24,7 @@ create table users (
 	email varchar(50),
 	home_directory int not null,
 	primary key (user_id),
-	foreign key (home_directory) references nodes(node_id)
+	foreign key (home_directory) references nodes(node_id) on delete cascade
 );
 
 create table node_access (
@@ -33,8 +33,8 @@ create table node_access (
 
 	can_view boolean not null default true,
 	can_edit boolean not null default false,
-	foreign key (node_id) references nodes(node_id),
-	foreign key (user_id) references users(user_id)
+	foreign key (node_id) references nodes(node_id) on delete cascade,
+	foreign key (user_id) references users(user_id) on delete cascade
 );
 /*we can name a node in many different ways */
 create table node_links (
@@ -43,8 +43,8 @@ create table node_links (
 	name varchar(100) not null default 'no name',
 	note varchar(200) not null default "",
 	check (directory_id != node_id), 
-	foreign key (directory_id) references nodes(node_id),
-	foreign key (node_id) references nodes(node_id)
+	foreign key (directory_id) references nodes(node_id) on delete cascade,
+	foreign key (node_id) references nodes(node_id) on delete cascade
 );
 
 

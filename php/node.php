@@ -6,20 +6,24 @@ require_once "user.php";
 	/*path is in terms of the simulated filesystem*/
 	function get_directory(string $abstract_path,User $user)
 	{
+		error_log("getting directory".$abstract_path." for ".$user->username);
+
 		global $database;
-		if($abstract_path[0] != "/") {
+		if($abstract_path[0] != "/")
+		{
 			return NULL;
 		}
 
-        $component = strtok($abstract_path,"/");
-        $current_dir = $user->home_directory;
+		$component = strtok($abstract_path,"/");
+		$current_dir = $user->home_directory;
 
-        while ($component) {
+		while($component) 
+		{
 			$current_dir = $database->get_node_id($component, $current_dir);
-            $component = strtok("/");
-        };
+			$component = strtok("/");
+		}
 
-		return $current_dir;
+			return $current_dir;
 	}
 
 	/*returns an assoc arrat of Node-s*/
@@ -39,6 +43,7 @@ require_once "user.php";
 		global $database;
 
 		$parent_dir_id=get_directory($abstract_path,$user);
+
 		if($database->check_if_name_is_taken($directory_name,$parent_dir_id))
 		{
 			return NULL;
