@@ -291,6 +291,7 @@ require_once "node.php";
 		   we remove the node and
 		   1. move the file represented by the node to the trash folder
 		   2. remove the file
+		   3. if node is a directory - delete all children nodes
 		   depends on the conf file
 		 */
 		function delete_node_by_id(int $node_id)
@@ -373,6 +374,37 @@ require_once "node.php";
 			{
 				error_log("there was an error with the statement ni link_nodes");
 			}
+		}
+
+
+		function unlink_nodes(int $dir_id, int $node_id)
+		{
+			$prep=$this->pdo->prepare("delete from node_links
+						   where directory_id=:dir_id and node_id=:node_id
+						");
+			$prep->bindParam(':dir_id',$dir_id);
+			$prep->bindParam(':node_id',$node_id);
+			if($prep->execute()==false)
+			{
+				error_log("there was an error with the first statement in unlink_nodes");
+				return;
+			}
+			$prep=$this->pdo->prepare("select node_id 
+						   from node_links 
+						   where node_id=:id
+							");
+			$prep->bindParam(':id',$node_id);
+			if($prep->execute()==false)
+			{
+				error_log("there was an error with the second statement in unlink_nodes");
+				return;
+			}
+			if(count($prep->fetchALL(PDO::FETCH_ASSOC))==0)
+			{
+				delete_node_by_id($node_id);
+			}
+
+
 		}
 
 		function create_home_directory():int
