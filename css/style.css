@@ -10,6 +10,12 @@ body {
 	overflow: hidden;
 }
 
+.noselect {
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
 #page {
 	display: flex;
 	flex: 1 0 0;
@@ -267,6 +273,7 @@ input[type=submit]:hover {
 }
 
 .window {
+    overflow: hidden;
     box-sizing: border-box;
 	margin: 0rem;
 	padding: 0;
@@ -286,8 +293,12 @@ input[type=submit]:hover {
     flex-direction: column;
 }
 
+.window.focus {
+    border-color: black;
+}
+
 .foldercontents, .filecontents {
-	background: rgba(250, 250, 250, .8);
+	background: rgba(250, 250, 250, .9);
     flex: 1 0 0;
 }
 
@@ -319,6 +330,10 @@ input[type=submit]:hover {
 	border-top-left-radius: 0.5rem;
 	border-top-right-radius: 0.5rem;
     cursor: grab;
+
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
 
 .window h3 {
@@ -430,4 +445,11 @@ input[type=submit]:hover {
     -ms-user-select: none;
     background-image: url("/img/backdrop.jpg");
     background-size: cover;
+}
+
+.share_dialog_contents {
+    display: flex;
+    flex-direction: column;
+    background: white;
+	background: rgba(255,255,255, 0.9);
 }
