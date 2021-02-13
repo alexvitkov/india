@@ -81,7 +81,7 @@ require_once "user.php";
 		{
 			return NULL;
 		}
-		$node_id=get_node_id($filename,$dir_id);
+		$node_id=$database->get_node_id($filename,$dir_id);
 		if($node_id==NULL)
 		{
 			return NULL;

@@ -27,12 +27,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 	}
 	else
 	{
-		http_response_code(409);
+//		http_response_code(409);
 		error_log("someone gave wrong premmissions =".$premissions."! This could be an attack");
-		exit(1);
+//		exit(1);
 	}
 
-	$share_link=create_share_link($path,$filename,$password,$user,$can_read,$can_write);
+	//$share_link=create_share_link($path,$filename,$password,$user,$can_read,$can_write);
+	$share_link=create_share_link($path,$filename,$password,$user,true,true);
+
 
 	if($share_link==NULL)
 	{
