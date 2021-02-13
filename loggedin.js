@@ -115,7 +115,6 @@ function openfile_nondir() {
 }
 
 function opendir() {
-
     update_path_visuals();
 
     var data = new FormData();
@@ -138,10 +137,12 @@ function opendir() {
         }
 
         files.sort((a, b) => {
-           if (a.is_directory && !b.is_directory)
-               return -1;
-           if (!a.is_directory && b.is_directory)
-               return 1;
+            if (get_path() == "/" && a.filename == "trash")
+                return 2;
+            if (a.is_directory && !b.is_directory)
+                return -1;
+            if (!a.is_directory && b.is_directory)
+                return 1;
             return a.filename.localeCompare(b.filename);
         });
 
@@ -162,6 +163,10 @@ function openfile(is_directory) {
     } else {
         openfile_nondir();
     }
+}
+
+function move_to_trash(filename) {
+    move_file("/trash", filename, path_combine(get_path(), filename));
 }
 
 function delete_file(filename) {
@@ -196,11 +201,15 @@ function rename_file(filename) {
     xhr.send(data);
 }
 
-function move_file(new_folder, filename) {
+function move_file(new_folder, filename, new_filename) {
+    if (!new_filename)
+        new_filename = filename;
+
     var data = new FormData();
-    data.append('old_folder', get_path());
-    data.append('new_folder', new_folder);
-    data.append('filename',   filename);
+    data.append('old_folder',  get_path());
+    data.append('new_folder',  new_folder);
+    data.append('filename',    filename);
+    data.append('new_filename',new_filename);
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/move.php', true);
@@ -248,7 +257,7 @@ function begin_drag(e, obj) {
     var elemRect = dragging.getBoundingClientRect();
     dragging_offset_x = e.clientX - elemRect.left;
     dragging_offset_y = -e.clientY + elemRect.top;
-    
+
 
     if (dragging_placeholder)
         obj.parentNode.insertBefore(dragging_placeholder, obj);
@@ -285,16 +294,20 @@ function end_drag(_e) {
 
 function drop_handler(dst, src) {
     if (dst.is_directory) {
-        move_file(path_combine(get_path(), dst.filename), src.filename);
+        if (get_path() == "/" && dst.filename == "trash") {
+            move_to_trash(src.filename);
+        } else {
+            move_file(path_combine(get_path(), dst.filename), src.filename);
+        }
     } else {
         alert(`Dropped ${dst.filename} on ${src.filename}`);
     }
 }
 
 function add_link_functionality(link, length) {
-    link.onclick = () => {
+    link.onclick = (e) => {
         focus.pwd.length = length,
-        openfile(true);
+            openfile(true);
     }
 
     link.onmouseup = (e) => {
@@ -326,10 +339,10 @@ function make_window(pwd) {
     var h2 = document.createElement('h2');
     wnd_html.appendChild(h2);
 
-    h2.onmousedown = (e) => {
-        begin_drag(e, wnd_html);
-        e.preventDefault();
-    };
+    //h2.onmousedown = (e) => {
+        //begin_drag(e, wnd_html);
+        // e.preventDefault();
+    //};
 
     path = document.createElement('div');
     path.classList.add('path');
@@ -393,7 +406,7 @@ function add_file_visuals(fileview) {
     var filename = document.createElement('div');
 
     if (fileview.is_directory) {
-        if (fileview.filename == "trash")
+        if (get_path() == "/" && fileview.filename == "trash")
             img.src="/mimeicons/user-trash.png";
         else
             img.src="/mimeicons/directory.png";
@@ -416,7 +429,7 @@ function add_file_visuals(fileview) {
                 ['Open in New Window', () => {alert('not implemented')}],
                 ['Rename', () => { rename_file(fileview.filename); }],
                 ['Share',  () => {alert('not implemented')}],
-                ['Delete', () => { delete_file(fileview.filename); }],
+                ['Delete', () => { move_to_trash(fileview.filename); }],
             ]);
         }
         e.preventDefault();
