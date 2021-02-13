@@ -2,6 +2,8 @@
 drop table if exists node_access;
 drop table if exists users;
 drop table if exists node_links;
+drop table if exists trash;
+drop trigger if exists delete_on_zero_links;
 drop table if exists nodes;
 
 
@@ -42,9 +44,29 @@ create table node_links (
 	node_id int not null,
 	name varchar(100) not null default 'no name',
 	note varchar(200) not null default "",
-	check (directory_id != node_id), 
 	foreign key (directory_id) references nodes(node_id) on delete cascade,
 	foreign key (node_id) references nodes(node_id) on delete cascade
 );
 
+create table trash (
+	node_id int not null,
+	foreign key (node_id) references nodes(node_id) on delete cascade	
+);
 
+
+create trigger delete_on_zero_links
+	after delete
+	on node_links
+	for each row 
+		insert into trash
+		select nodes.node_id
+		from nodes
+		where nodes.node_id not in (select node_id from node_links) and nodes.node_id=old.node_id;
+			
+		/*
+create trigger delete_links
+	after delete
+	on nodes
+	for each row
+		delete from 
+		*/
