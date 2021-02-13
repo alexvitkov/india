@@ -4,6 +4,7 @@ drop table if exists users;
 drop table if exists node_links;
 drop table if exists trash;
 drop table if exists super_trash;
+drop table if exists shared_nodes;
 drop table if exists nodes;
 
 
