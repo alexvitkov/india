@@ -14,13 +14,13 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 	$filename=$_POST["filename"];
 	$users=$_POST["users"];
 	$password=$_POST["password"];
-	$premissions=$_POST["premissions"];
+	$permissions=$_POST["permissions"];
 
-	if($premissions==1)
+	if($permissions==1)
 	{
 		$can_read=true;
 		$can_write=false;
-	}else if($premissions==3)
+	}else if($permissions==3)
 	{
 		$can_read=true;
 		$can_write=true;
@@ -28,7 +28,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 	else
 	{
 //		http_response_code(409);
-		error_log("someone gave wrong premmissions =".$premissions."! This could be an attack");
+		error_log("someone gave wrong premmissions =".$permissions."! This could be an attack");
 //		exit(1);
 	}
 
@@ -52,8 +52,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 		http_response_code(409);
 		exit(0);
 	}
-	$premissions=$database->get_premissions($file_id,$user->user_id);
-	if($premissions["can_view"]==true)
+	$permissions=$database->get_permissions($file_id,$user->user_id);
+	if($permissions["can_view"]==true)
 	{
 		$node=$database->get_node($file_id);
 		if($node->is_directory)
