@@ -2,6 +2,7 @@
 require_once "configuration.php";
 require_once "database.php";
 require_once "user.php";
+
 session_start();
 
 $user=$_SESSION['user_object'];

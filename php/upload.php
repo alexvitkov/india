@@ -2,9 +2,10 @@
 require_once "database.php";
 require_once "configuration.php";
 require_once "file_type_recogniser.php";
+require_once "user.php";
 require_once "node.php";
-
 session_start();
+
 if (!isset( $_POST["filename"]) || !isset($_FILES["the_file"]) || !isset($_POST['parent_directory']))
 {
 	error_log("someone tried to upload something impropperly");
