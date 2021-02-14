@@ -97,7 +97,7 @@ require_once "user.php";
 		{
 			return NULL;
 		}
-		$shared_node=$database->create_shared_node($password,$node_id);
+		$shared_node=$database->create_shared_node($password,$node_id,$users);
 		if($shared_node==NULL)
 		{
 			return NULL;

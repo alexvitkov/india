@@ -62,6 +62,7 @@ create table shared_nodes (
 	node_id int not null,
 	passcode varchar(100) default "",
 	code varchar(100) default "",
+	is_public boolean default false,
 	foreign key (node_id) references nodes(node_id) on delete cascade
 );
 
@@ -108,3 +109,5 @@ create trigger delete_links
 	for each row
 		delete from node_links
 		where directory_id=old.node_id;
+
+

@@ -21,7 +21,7 @@ require_once "node.php";
 				$this->pdo=new PDO("mysql:dbname={$database_name};host={$database_location}",$database_username,$database_password);
 		}
 
-		/*returns NULL if this isn't a user, otherwise returns the user*/
+		/*returns NULL if this isn't a user, otherwise returns the user in the form of the User class*/
 		function get_user(string $user) 
 		{
 			$ret=new User;
@@ -75,7 +75,7 @@ require_once "node.php";
 			}
 		}
 
-		/*returns assoc array*/
+		/*returns assoc array , or NULL on error*/
 		function get_nodes_with_name($name)
 		{
 			$statement=$this->pdo->prepare(
@@ -92,7 +92,7 @@ require_once "node.php";
 			return $statement->fetchAll(PDO::FETCH_ASSOC);
 		}
 
-		/*returns id*/
+		/*returns id or NULL on error*/
 		function get_node_with_code($code)
 		{
 			$statement=$this->pdo->prepare(
@@ -461,15 +461,22 @@ require_once "node.php";
 			}
 
 		}
-		function create_shared_node(string $password,int $node_id)
+		function create_shared_node(string $password,int $node_id,string $users)
 		{
 			$code=$this->get_random_node_name("");
-			$prep=$this->pdo->prepare("insert into shared_nodes(node_id,passcode,code)
-							values (:id,:pass,:code)
+			$prep=$this->pdo->prepare("insert into shared_nodes(node_id,passcode,code,is_public)
+							values (:id,:pass,:code,:is_public)
 						");
 			$prep->bindParam(':id',$node_id);
 			$prep->bindParam(':pass',$password);
 			$prep->bindParam(':code',$code);
+			if($users=="")
+			{
+				$prep->bindParam(':is_public',true);
+			}else
+			{
+				$prep->bindParam(':is_public',false);
+			}
 			if($prep->execute()==false)
 			{
 				error_log("could not create shared node in create_shared_node");

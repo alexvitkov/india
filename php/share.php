@@ -5,11 +5,16 @@ require_once "user.php";
 
 session_start();
 
-$user=$_SESSION['user_object'];
 
 
 if($_SERVER["REQUEST_METHOD"] == "POST")
 {
+	if(!isset($_SESSION['user_object']) || !isset($_POST["folder"]) || !isset($_POST["filename"]) || !isset($_POST["users"]) || !isset($_POST["password"]) || !isset($_POST["premissions"]) )
+	{
+		http_response_code(409);
+		exit(0);
+	}
+	$user=$_SESSION['user_object'];
 	$path=$_POST["folder"];
 	/*this could be a directory as well*/
 	$filename=$_POST["filename"];
@@ -47,8 +52,19 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 	exit(0);
 }else if($_SERVER["REQUEST_METHOD"]== "GET")
 {
+	if(!isset($_GET["file"]))
+	{
+		http_response_code(409);
+		exit(0);
+	}
 	$code=$_GET["file"];
-	$password=$_GET["password"];
+	if(isset($_GET["password"]))
+	{
+		$password=$_GET["password"];
+	}else
+	{
+		$password="";
+	}
 
 	$shared_node=$database->get_shared_node($code);
 	if($shared_node==NULL || $shared_node->password!=$password)
