@@ -27,9 +27,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 	}
 	else
 	{
-//		http_response_code(409);
+		http_response_code(409);
 		error_log("someone gave wrong premmissions =".$permissions."! This could be an attack");
-//		exit(1);
+		exit(1);
 	}
 
 	//$share_link=create_share_link($path,$filename,$password,$user,$can_read,$can_write);
@@ -46,16 +46,18 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 }else if($_SERVER["REQUEST_METHOD"]== "GET")
 {
 	$code=$_GET["file"];
-	$file_id=$database->get_node_with_code($code);
-	if($file_id==NULL)
+	$password=$_GET["password"];
+
+	$shared_node=$database->get_shared_node($code);
+	if($shared_node==NULL || $shared_node->password!=$password)
 	{
 		http_response_code(409);
 		exit(0);
 	}
-	$permissions=$database->get_permissions($file_id,$user->user_id);
+	$permissions=$database->get_permissions($shared_node->node_id,$user->user_id);
 	if($permissions["can_view"]==true)
 	{
-		$node=$database->get_node($file_id);
+		$node=$database->get_node($shared_node->node_id);
 		if($node->is_directory)
 		{
 			/*spooky stuff here*/
