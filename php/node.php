@@ -74,6 +74,10 @@ require_once "user.php";
 	{
 		global $database;
 		$parent_dir_id=get_directory($abstract_path,$user);
+		if($parent_dir_id==$user->home_directory && ($filename=="share" || $filename=="trash"))
+		{
+			return ;
+		}
 		$database->unlink_nodes($parent_dir_id,$filename);
 	}
 	function create_share_link(string $abstract_path,string $filename,string $password,

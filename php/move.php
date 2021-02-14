@@ -26,7 +26,9 @@ $homedir    = $user->home_directory;
 
 $old_dir = get_directory($old_folder, $user);
 $new_dir = get_directory($new_folder, $user);
-if (!$old_dir || !$new_dir) {
+$trash_dir = get_directory("/trash",$user);
+$share_dir = get_directory("/share",$user);
+if (!$old_dir || !$new_dir || $old_dir==$user->home_directory || $old_dir==$trash_dir || $old_dir==$share_dir) {
     error_log("invalid src/dst dir");
 	http_response_code(409);
     exit(0);
