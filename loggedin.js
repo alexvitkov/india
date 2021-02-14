@@ -145,6 +145,28 @@ function update_path_visuals() {
     }
 }
 
+function read_file_contents(text, cb, folder, filename) {
+    var data = new FormData();
+    data.append('folder', folder);
+    data.append('filename', filename);
+
+    let xhr = new XMLHttpRequest();
+    xhr.open('POST', '/php/readfile.php', true);
+
+    if (text) {
+        xhr.onload = function () {
+            cb(e.responseText);
+        };
+    } else {
+        xhr.responseType = 'arraybuffer';
+        xhr.onload = function () {
+            cb(xhr.response);
+        };
+    }
+
+    xhr.send(data);
+}
+
 function openfile_nondir() {
     var mimetype = "text/plain";
 
@@ -597,6 +619,35 @@ function make_share_window(folder, filename) {
     return wnd;
 }
 
+function download_file(in_file, filename) {
+
+    if (in_file) {
+        var folder = get_path(focus.pwd.length - 1);
+        filename = focus.pwd[focus.pwd.length - 1];
+    } else {
+        var folder = get_path();
+    }
+
+    read_file_contents(false, (x) => {
+        var blob = new Blob([new Uint8Array(x, 0, x.length)]);
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = "filename";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    }, folder, filename);
+
+    return;
+}
+
+
+
+
 function delete_window() {
     var index = windows.indexOf(focus);
     if (index >= 0) {
@@ -631,19 +682,19 @@ function make_window(pwd) {
     }
 
     {
-        wnd.filecontentsroot = mk(wnd.visuals, 'div');
+        wnd.filecontentsroot = mk(wnd.visuals, 'div', 'filecontentsroot');
         var h3 = mk(wnd.filecontentsroot, 'h3');
 
         var download_btn = mk(h3, 'button');
         download_btn.innerText = "Download";
-        download_btn.onclick = () => { download_file(); }
+        download_btn.onclick = () => { download_file(true); }
 
         mk(h3, 'div', 'separator');
 
         var download_btn = mk(h3, 'button');
         download_btn.innerText = "Share";
         download_btn.onclick = () => { share(true); }
-        
+
         mk(h3, 'div', 'separator');
 
         wnd.filecontents = mk(wnd.filecontentsroot, 'div', 'filecontents');
@@ -687,7 +738,7 @@ function add_file_visuals(fileview) {
                     focus.pwd.push(fileview.filename);
                     openfile(fileview.is_directory);
                 }], 
-                ['Open in New Window', () => {alert('not implemented')}],
+                // ['Open in New Window', () => {alert('not implemented')}],
             ];
 
             if (is_in_trash) {
@@ -696,6 +747,14 @@ function add_file_visuals(fileview) {
             } else if (!is_trash) {
                 context_list.push(
                     ['Rename', () => { rename_file(fileview.filename); }],
+                );
+                if (!fileview.is_directory) {
+                    context_list.push(
+                        ['Share',    () => { share(false, fileview.filename); }],
+                        ['Download', () => { download_file(false, fileview.filename); }],
+                    );
+                }
+                context_list.push(
                     ['Share',  () => { share(false, fileview.filename); }],
                     ['Delete', () => { move_to_trash(fileview.filename); }]
                 );
