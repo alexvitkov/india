@@ -1,3 +1,6 @@
+create database if not exists fileup;
+use fileup;
+
 /*BEWARE!*/
 drop table if exists node_access;
 drop table if exists users;

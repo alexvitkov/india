@@ -1,45 +1,131 @@
+// This should be only set to false for debugging purposes
+// If it's set to false, the upload requests will be synchronous
+// and you will be able to see PHP's echo output in the browser
 var FORM_ASYNC = true;
 
+// A FileView is an entry inside the explorer window
+class FileView {
+    constructor(filename, visuals, mimetype, is_directory) {
+        this.filename     = filename;
+        this.visuals      = visuals; // The DOM object with the icon and the filenam text
+        this.mimetype     = mimetype;
+        this.is_directory = is_directory;
+    }
+}
+
+// An array of all fileviews currently open
+var files = [];
+
+class Window {
+    constructor(pwd) {
+        this.pwd = pwd;      // pwd = [ "Folder1", "Folder2" ] means the current directory of that window is /Folder1/Folder2
+        this.visuals = null; // The DOM object
+        this.h2 = null;      // The titlebar of the window
+    }
+}
+
+// An array with all the windows on the screen
+var windows = [];
+
+// The focused window
+var focus = null;
+
+// Those all belong to the hidden file upload form
 const upload_form    = document.getElementById("upload_form");
 const the_file       = document.getElementById("the_file");
 const filename_input = document.getElementById("filename");
 const current_directory       = document.getElementById("current_directory");
 const upload_parent_directory = document.getElementById("upload_parent_directory");
 
-the_file.onchange = on_file_added;
-
-var windows = [];
-var focus = null;
-
+// Some elements have custom right click context menus
+// If there's a custom context menu active, this will be it
 var context_menu = null;
-var dragging = null;
 
+
+// If we're currently dragging something (a window or a file), this is the DOM object we're dragging
+// dragging_offset_x and dragging_offset_y are the difference between the objec's top left point and the cursor position
+// this is then added to the cursor position when the mouse is moved
+var dragging = null;
+var dragging_offset_x = 0, dragging_offset_y = 0;
+
+// If we have pressed down a window's title bar but haven't yet started dragging it, it's the drag candidate
+// This is needed because we don't yet know whether we want to start dragging the window or click an element in the titlebar
+// Once the mouse has moved sufficiently far away from dragging_candidate_x or y, we start dragging
 var dragging_candidate = null;
 var dragging_candidate_x, dragging_candidate_y;
 
+// If we're dragging a fileview, this is set to the fileview class instance itself, because 'dragging' is just a DOM object
+// The placeholder is a dummy DIV that we insert in the object's place on the grid to keep things nicely aligned
 var dragging_fileview;
 var dragging_placeholder = null;
-var dragging_offset_x = 0, dragging_offset_y = 0;
 
+// Windows have a z-index. When we click a window it is sent to the top this will be its new z-index
+// We then increment the depth, and the next window we click will go on top of the current one
 var depth = 20;
 
-class FileView {
-    constructor(filename, visuals, mimetype, is_directory) {
-        this.filename     = filename;
-        this.visuals      = visuals;
-        this.mimetype     = mimetype;
-        this.is_directory = is_directory;
+
+
+function main() {
+    // Create a window that looks at the root directory
+    var root_window = make_window([]);
+
+    // Focus that window and load the directory
+    focus_window(root_window);
+    openfile(true);    
+}
+
+function focus_window(wnd) {
+    // Unfocus the old window
+    if (focus)
+        focus.visuals.classList.remove('focus');
+    focus = wnd;
+    // And focus the new one!
+    if (wnd) {
+        wnd.visuals.classList.add('focus');
+        wnd.visuals.style.zIndex = depth ++;
     }
 }
 
-class PendingUpload {
-    constructor(fileview) {
-        this.fileview = fileview;
+// Delete the focused window
+function delete_window() {
+    var index = windows.indexOf(focus);
+    if (index >= 0)
+        windows.splice(index, 1);
+    
+    focus.visuals.parentNode.removeChild(focus.visuals);
+    fous = null;
+}
+
+// Create a right click context menu
+function context(e, entries) {
+    if (context_menu)
+        context_menu.remove();
+
+    context_menu = mk(document.body, 'ul', 'context');
+
+    context_menu.onmousedown = (e) => {
+        e.stopPropagation();
+    }
+    
+    context_menu.onclick = (e) => {
+        context_menu.remove();
+        context_menu = null;
+    }
+
+
+    context_menu.style.left = e.clientX + "px";
+    context_menu.style.top  = e.clientY + "px";
+
+    for (const e of entries) {
+        const li = document.createElement('li');
+        li.innerText = e[0];
+        li.onclick = e[1];
+        context_menu.appendChild(li);
     }
 }
 
-var files = [];
 
+// This is called whenever the <input type="file">'s value changes
 function on_file_added(_e) {
     if (the_file.files.length >= 1) {
         filename_input.value          = the_file.files[0].name;
@@ -56,6 +142,7 @@ function on_file_added(_e) {
             body: new FormData(upload_form)
         }).then((resp) => {
             if (resp.status == 200) {
+                // Reload the directory so the user can see the newly uploaded file
                 openfile(true);
             } else {
                 alert("Upload failed");
@@ -69,6 +156,10 @@ function on_file_added(_e) {
     }
 }
 
+// It's honestly really sad that we need this
+// We have an image viewer, but we load the uploaded via the XMLHttpRequest API, which gives us an array buffer
+// We need to base64 encode the image data so we can feed it into the <img src="...">
+// and the standart base64 encode API is shit
 // https://stackoverflow.com/questions/7370943/retrieving-binary-file-content-using-javascript-base64-encode-it-and-reverse-de
 function base64ArrayBuffer(arrayBuffer) {
   var base64    = ''
@@ -122,14 +213,18 @@ function base64ArrayBuffer(arrayBuffer) {
   return base64
 }
 
+
+// This updates the path of the window's DOM (the "Root > Folder1 > Folder2 > foo.png")
 function update_path_visuals() {
     var the_path = focus.visuals.getElementsByClassName('path')[0];
 
+    // Remove the old path
     while (the_path.children.length > 0)
         the_path.removeChild(the_path.lastChild);
 
     for (let i = -1; i < focus.pwd.length; i++) {
         var d;
+        // For each element after the first create a separator
         if (i >= 0) {
             d = focus.pwd[i];
             var separator_div = mk(the_path, 'div', 'separator');
@@ -141,10 +236,32 @@ function update_path_visuals() {
         var entry = mk(the_path, 'button', 'pathentry');
         entry.innerText = d;
 
-        add_link_functionality(entry, i + 1);
+        // When we click the entry, go to its folder
+        entry.onclick = (e) => {
+            if (length < focus.pwd.length) {
+                focus.pwd.length = i + 1;
+                openfile(true);
+            }
+        }
+    
+        // We can drop files onto the path, which will omve them to teh folder
+        entry.onmouseup = (e) => {
+            if (dragging && dragging_fileview) {
+                var new_folder = get_path(i + 1);
+                move_file(new_folder, dragging_fileview.filename);
+                end_drag();
+    
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }
     }
 }
 
+
+// This asks the server for the contents of the specified file
+// The 'cb' callback is then called, which gives you the file as either text or binary
+// depending on whether or not text is true/false
 function read_file_contents(text, cb, folder, filename) {
     var data = new FormData();
     data.append('folder', folder);
@@ -167,6 +284,10 @@ function read_file_contents(text, cb, folder, filename) {
     xhr.send(data);
 }
 
+
+// This opens a file.
+// If the file has image/* mimetype, it will be displayed as an image
+// otherwise it will be displayed as plaintext
 function openfile_nondir() {
     var mimetype = "text/plain";
 
@@ -178,13 +299,12 @@ function openfile_nondir() {
     while (focus.filecontents.children.length > 0)
         focus.filecontents.removeChild(focus.filecontents.lastChild);
 
+    // Send a request to readfile.php, which will give us the contents
     var data = new FormData();
     data.append('folder', get_path(focus.pwd.length - 1));
     data.append('filename', focus.pwd[focus.pwd.length - 1]);
 
     var xhr = new XMLHttpRequest();
-
-    focus.pwd.push();
 
     update_path_visuals();
 
@@ -216,6 +336,7 @@ function openfile_nondir() {
     xhr.send(data);
 }
 
+// This is a tiny wrapper around the share_window.
 function share(in_file, filename) {
     if (in_file) {
         var folder = get_path(focus.pwd.length - 1);
@@ -228,6 +349,7 @@ function share(in_file, filename) {
     focus_window(wnd);
 }
 
+// This loads the contents of the current directory
 function opendir() {
     update_path_visuals();
 
@@ -245,11 +367,15 @@ function opendir() {
         if (!json)
             return;
 
+        // Create the FileViews from the json response
         for (const f of json) {
             var view = new FileView(f.name, null, f.mimetype, f.is_directory && f.is_directory != "0");
             files.push(view);
         }
 
+        // Sort the files nicely before adding their visuals
+        // Folders come first, then files, then the special trash directory
+        // Everything inside the categories is lexically sorted
         files.sort((a, b) => {
             if (get_path() == "/" && a.filename == "trash")
                 return 2;
@@ -271,6 +397,7 @@ function opendir() {
     focus.foldercontents.style.display   = 'block';
 }
 
+
 function openfile(is_directory) {
     if (is_directory) {
         opendir();
@@ -291,6 +418,9 @@ function restore_from_trash(filename) {
     move_file(new_directory, filename, new_filename);
 }
 
+
+// This deletes the file, *for real*
+// move_to_trash is what is actually called when the user clicks 'Delete'
 function delete_file(filename) {
     var data = new FormData();
     data.append('folder', get_path());
@@ -340,7 +470,8 @@ function move_file(new_folder, filename, new_filename) {
     xhr.send(data);
 }
 
-function new_folder() { var dirname = prompt(`Directory name`, "New Folder");
+function new_folder() { 
+    var dirname = prompt(`Directory name`, "New Folder");
     if (!dirname)
         return;
 
@@ -356,11 +487,14 @@ function new_folder() { var dirname = prompt(`Directory name`, "New Folder");
     xhr.send(data);
 }
 
+
+// Dragging a fileview is a bit different from dragging a window
+// This does some setup work before calling the common begin_drag
 function begin_drag_fileview(e, fileview) {
     if (dragging)
         end_drag();
 
-    // Inserted in place by begin_drag
+    // The dragging_placeholder is inserted into its place by the begin_drag function
     dragging_placeholder = document.createElement('div');
     dragging_fileview = fileview;
 
@@ -370,6 +504,8 @@ function begin_drag_fileview(e, fileview) {
     begin_drag(e, fileview.visuals);
 }
 
+// Start dragging the 'obj' DOM element
+// e is a DOM event, this should only get called in response of a DOM event
 function begin_drag(e, obj, dont_set_width) {
     dragging = obj;
     dragging_candidate = null;
@@ -395,12 +531,14 @@ function begin_drag(e, obj, dont_set_width) {
 }
 
 function end_drag(_e) {
+    // If there's a dragging palceholder remove it and put the dragged node back into its place
     if (dragging_placeholder) {
         dragging_placeholder.parentNode.insertBefore(dragging, dragging_placeholder);
         dragging_placeholder.remove();
         dragging_placeholder = null;
     }
 
+    // If we were dragging a FileView, we need to reset some CSS
     if (dragging_fileview) {
         dragging.style.removeProperty("position");
         dragging.style.removeProperty("width");
@@ -414,54 +552,8 @@ function end_drag(_e) {
     dragging = null;
 }
 
-function drop_handler(dst, src) {
-    if (dst.is_directory) {
-        if (get_path() == "/" && dst.filename == "trash") {
-            move_to_trash(src.filename);
-        } else {
-            move_file(path_combine(get_path(), dst.filename), src.filename);
-        }
-    } else {
-        alert(`Dropped ${dst.filename} on ${src.filename}`);
-    }
-}
-
-function add_link_functionality(link, length) {
-    link.onclick = (e) => {
-        if (length < focus.pwd.length) {
-            focus.pwd.length = length;
-            openfile(true);
-        }
-    }
-
-    link.onmouseup = (e) => {
-        if (dragging && dragging_fileview) {
-            var new_folder = get_path(length);
-            move_file(new_folder, dragging_fileview.filename);
-            end_drag();
-
-            e.preventDefault();
-            e.stopPropagation();
-        }
-    }
-}
-
-class Window {
-    constructor(pwd) {
-        this.pwd = pwd;
-    }
-}
-
-function focus_window(wnd) {
-    if (focus)
-        focus.visuals.classList.remove('focus');
-    focus = wnd;
-    if (wnd) {
-        wnd.visuals.classList.add('focus');
-        wnd.visuals.style.zIndex = depth ++;
-    }
-}
-
+// This creates the parts of a window that are common between all window types
+// This should only really be called by another function that will then fill up the window
 function make_window_base(pwd, x, y, w, h) {
     var wnd = new Window(pwd);
     windows.push(wnd);
@@ -491,6 +583,8 @@ function make_window_base(pwd, x, y, w, h) {
     return wnd;
 }
 
+// This is a widely abused helper function that creates a DOM element, attaches it as the 
+// last child of 'parent' and possibly gives it a class
 function mk(parent, type, _class) {
     var el = document.createElement(type);
     parent.appendChild(el);
@@ -499,15 +593,18 @@ function mk(parent, type, _class) {
     return el;
 }
 
+// Crate a horizontal div
 function mkhdiv(parent) {
     var hdiv = mk(parent, 'div');
-    hdiv.style.display = "flex";
+    hdiv.style.display    = "flex";
     hdiv.style.alignItems = "center";
-    hdiv.style.padding = "0.3rem";
-    hdiv.style.gap = "0.3rem";
+    hdiv.style.padding    = "0.3rem";
+    hdiv.style.gap        = "0.3rem";
     return hdiv;
 }
 
+// Create a checkbocx with a label.
+// togglefn will be called when its value changes with an argument that's either true/false
 function mkcheckbox(parent, label, togglefn) {
     var hdiv = mkhdiv(parent);
 
@@ -524,18 +621,22 @@ function mkcheckbox(parent, label, togglefn) {
     };
 }
 
+// This monstrocity creates the 'Share file' window
 function make_share_window(folder, filename) {
     var wnd = make_window_base(null, 400, 400, 400, 0);
 
     wnd.h2.style.padding = "0.0rem 0rem 0.0rem 0.8rem";
     wnd.h2.style.display = 'flex';
 
+    // The title of the window. WE set its 'flex' to 1 1 0 so it fills up the titlebar
+    // and pushes the X button to the very right
     var heading = mk(wnd.h2, 'span');
     heading.innerText = "Share " + filename;
     heading.style.display = 'flex';
     heading.style.alignItems = 'center';
     heading.style.flex = "1 1 0";
 
+    // Close button
     var x_button = mk(wnd.h2, 'button', 'close_button');
     x_button.innerText = "X";
     x_button.onclick = delete_window;
@@ -543,6 +644,7 @@ function make_share_window(folder, filename) {
     wnd.foldercontents = mk(wnd.visuals, 'div', 'share_dialog_contents');
     wnd.foldercontents.style.padding = "0.5rem";
 
+    // This is the data that will be sent when we hit "Generate link"
     var data = {
         write_permissions: false,
         private: false,
@@ -551,6 +653,7 @@ function make_share_window(folder, filename) {
         userlist: [],
     }
 
+    // If private link is clicked, show the "Add user" button and the user list
     var userlist, add_user;
     mkcheckbox(wnd.foldercontents, "Private link", (toggled) => {
         add_user.style.display = toggled ? "block" : "none";
@@ -564,6 +667,7 @@ function make_share_window(folder, filename) {
     add_user.innerText = "Add user";
     add_user.style.display = "none";
 
+    // When we hit 'Add user', add an input field for a new user
     add_user.onclick = (e) => {
         var i = mk(userlist, 'input');
         i.value = 'John Doe';
@@ -576,13 +680,14 @@ function make_share_window(folder, filename) {
         }
     }
 
-    // Click the add_user to add a default user
+    // Click the add_user once to add a default user, since a URL that nobody can use makes no sense
     add_user.click();
 
     mkcheckbox(wnd.foldercontents, "Give write permissions", (toggled) => {
         data.write_permissions = toggled;
     });
 
+    // If 'Password protected' is checked, show the password field
     let password_container;
     mkcheckbox(wnd.foldercontents, "Password protected", (toggled) => {
         data.has_password = toggled;
@@ -606,6 +711,8 @@ function make_share_window(folder, filename) {
     generate_url_button.onclick = () => {
         console.log(data);
 
+        // The backend expects the users to be either an empty string, if the URL is public
+        // or a comma separated list of usernaems
         var users = "";
         if (data.private) {
             users = data.userlist.join(',');
@@ -615,6 +722,8 @@ function make_share_window(folder, filename) {
         form_data.append('folder', folder);
         form_data.append('filename', filename);
         form_data.append('users', users);
+        // 0 = No permissions, 1 = Read only, 2 = Write , 1|2 = 3 = RW
+        // Only 1 and 3 make sense in the context of a URL
         form_data.append('permissions', data.write_permissions ? 3 : 1);
         form_data.append('password', data.has_password ? data.password : "");
 
@@ -632,7 +741,6 @@ function make_share_window(folder, filename) {
 }
 
 function download_file(in_file, filename) {
-
     if (in_file) {
         var folder = get_path(focus.pwd.length - 1);
         filename = focus.pwd[focus.pwd.length - 1];
@@ -640,6 +748,10 @@ function download_file(in_file, filename) {
         var folder = get_path();
     }
 
+    // Read the file contents and then do DISGUSTING javascript things to download the ifle
+    // We create a invisible <a> that we click and then delete
+    // That <a> has its download attribute set so we download the contents instead of opening it in a new tab
+    // and of course its href is a virtual object URL that has its content set to a blob 
     read_file_contents(false, (x) => {
         var blob = new Blob([new Uint8Array(x, 0, x.length)]);
         var url = URL.createObjectURL(blob);
@@ -659,28 +771,21 @@ function download_file(in_file, filename) {
 
 
 
-
-function delete_window() {
-    var index = windows.indexOf(focus);
-    if (index >= 0) {
-        windows.splice(index, 1);
-    }
-    focus.visuals.parentNode.removeChild(focus.visuals);
-    fous = null;
-}
-
+// make_window creates an explorer window - the kind that can list directories/open files
 function make_window(pwd) {
     var wnd = make_window_base(pwd, 100, 100, 800, 600);
 
     path = mk(wnd.h2, 'div', 'path');
 
+    // wnd.foldercontents is where the FileViews will be stored
+    // it also has a subheader (h3) with 'Upload' and 'New FOlder' buttons
     {
         wnd.foldercontents = mk(wnd.visuals, 'div', 'foldercontents');
         var h3 = mk(wnd.foldercontents, 'h3');
 
         var upload_btn = mk(h3, 'button');
         upload_btn.innerText = "Upload";
-        upload_btn.onclick = () => { begin_upload(); }
+        upload_btn.onclick = () => { the_file.click(); }
 
         mk(h3, 'div', 'separator');
 
@@ -693,6 +798,8 @@ function make_window(pwd) {
         wnd.filegrid = mk(wnd.foldercontents, 'div', 'files');
     }
 
+    // wnd.filecontentsroot is where the filedata will be stored for open files
+    // it also has a subheader (h3) with Share and Download buttons
     {
         wnd.filecontentsroot = mk(wnd.visuals, 'div', 'filecontentsroot');
         var h3 = mk(wnd.filecontentsroot, 'h3');
@@ -716,10 +823,12 @@ function make_window(pwd) {
 }
 
 
+// Create the visuals for a FileView
 function add_file_visuals(fileview) {
-    // Are we in a subdirectory of the trash folder
+    // Are we in a subdirectory of the trash folder?
     var is_in_trash = focus.pwd.length > 0 && focus.pwd[0] == "trash";
-    // Is the current filewview the trash folder itself
+
+    // Is the current filewview the trash folder itself?
     var is_trash    = focus.pwd.length == 0 && fileview.filename == "trash";
 
     var visuals = mk(focus.filegrid, 'div');
@@ -746,6 +855,7 @@ function add_file_visuals(fileview) {
         if (!dragging) {
 
             var context_list = [
+                // Open is always in the context list
                 ['Open', () => {
                     focus.pwd.push(fileview.filename);
                     openfile(fileview.is_directory);
@@ -754,9 +864,11 @@ function add_file_visuals(fileview) {
             ];
 
             if (is_in_trash) {
+                // If we're in the trash, we can restore files or delete them forever
                 context_list.push(['Restore', () => {  restore_from_trash(fileview.filename); }]);
                 context_list.push(['Delete forever', () => { delete_file(fileview.filename); }]);
             } else if (!is_trash) {
+                // If we;'re not in trash we can rename/share/download/move files to trash
                 context_list.push(
                     ['Rename', () => { rename_file(fileview.filename); }],
                 );
@@ -788,7 +900,17 @@ function add_file_visuals(fileview) {
 
     visuals.onmouseup = (e) => {
         if (dragging) {
-            drop_handler(fileview, dragging_fileview);
+            if (fileview.is_directory) {
+                if (get_path() == "/" && fileview.filename == "trash") {
+                    // If we've dragged something onto the trashcan, it's trash
+                    move_to_trash(dragging_fileview.filename);
+                } else {
+                    // If we've dragged something onto a directory, move it into that directory
+                    move_file(path_combine(get_path(), fileview.filename), dragging_fileview.filename);
+                }
+            } else {
+                // alert(`Dropped ${dst.filename} on ${src.filename}`);
+            }
             end_drag();
         }
         e.preventDefault();
@@ -811,31 +933,9 @@ function add_file_visuals(fileview) {
 
 }
 
-function begin_upload() {
-    the_file.click();
-}
 
-function context(e, entries) {
-    if (context_menu)
-        context_menu.remove();
-
-    context_menu = mk(document.body, 'ul', 'context');
-
-    context_menu.onmousedown = (e) => {
-        e.stopPropagation();
-    }
-
-    context_menu.style.left = e.clientX + "px";
-    context_menu.style.top  = e.clientY + "px";
-
-    for (const e of entries) {
-        const li = document.createElement('li');
-        li.innerText = e[0];
-        li.onclick = e[1];
-        context_menu.appendChild(li);
-    }
-}
-
+// Reads the 'pwd' of the focused window
+// If pwd is ['foo', 'bar', 'baz'], this returns '/foo/bar/baz' 
 function get_path(max_length) {
     if (max_length == undefined) {
         max_length = focus.pwd.length;
@@ -858,9 +958,14 @@ function path_combine(a, b) {
         return a + "/" + b;
 }
 
-document.body.onclick = () => {
-    if (context_menu)
+
+// When we click anywhere, remove the context menu
+// The context menu itself has a onmousedown that prevents propagation so we can click its elements
+document.body.onmousedown = (_e) => {
+    if (context_menu) {
         context_menu.remove();
+        context_menu = null;
+    }
 }
 
 document.body.onmousemove = (e) => {
@@ -875,11 +980,6 @@ document.body.onmousemove = (e) => {
     }
 }
 
-document.body.onmousedown = (_e) => {
-    if (context_menu)
-        context_menu.remove();
-}
-
 document.body.onmouseup = (_e) => {
     if (dragging_candidate)
         dragging_candidate = null;
@@ -892,10 +992,12 @@ document.body.oncontextmenu = (e) => {
         end_drag();
         e.preventDefault();
     }
-    if (context_menu)
+    if (context_menu) {
         context_menu.remove();
+        context_menu = null;
+    }
 }
 
-var root_window = make_window([]);
-focus_window(root_window);
-openfile(true);
+the_file.onchange = on_file_added;
+
+main();
