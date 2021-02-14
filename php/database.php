@@ -21,7 +21,7 @@ require_once "node.php";
 				$this->pdo=new PDO("mysql:dbname={$database_name};host={$database_location}",$database_username,$database_password);
 		}
 
-		/*returns false if this isn't a user, otherwise returns the user*/
+		/*returns NULL if this isn't a user, otherwise returns the user*/
 		function get_user(string $user) 
 		{
 			$ret=new User;
@@ -33,16 +33,16 @@ require_once "node.php";
 
 			$hold=$prep->fetch(PDO::FETCH_ASSOC);
 
-			if($hold)
+			if(isset($hold["user_id"]))
 			{
 				$ret->user_id=$hold["user_id"];
 				$ret->username=$hold["username"];
 				$ret->email_address=$hold["email"];
-				$ret->current_directory=$hold["home_directory"];
+				$ret->home_directory=$hold["home_directory"];
 				return $ret;
 			}else
 			{
-				return false;
+				return NULL;
 			}
 		}
 		/*returns false if this isn't a user or the password is incorrect, otherwise returns the userid*/
@@ -444,6 +444,9 @@ require_once "node.php";
 			$ret=$this->create_dangling_directory();
 			$trash_folder_id=$this->create_dangling_directory();
 			$this->link_nodes($ret,$trash_folder_id,"trash","trash folder");
+
+			$share_folder_id=$this->create_dangling_directory();
+			$this->link_nodes($ret,$share_folder_id,"share","shared things go in here");
 			return $ret;
 		}
 

@@ -76,7 +76,8 @@ require_once "user.php";
 		$parent_dir_id=get_directory($abstract_path,$user);
 		$database->unlink_nodes($parent_dir_id,$filename);
 	}
-	function create_share_link(string $abstract_path,string $filename,string $password,User $user,bool $can_read,bool $can_write)
+	function create_share_link(string $abstract_path,string $filename,string $password,
+			User $user,bool $can_read,bool $can_write,$users)
 	{
 		global $database;
 		global $domain_name;
@@ -98,10 +99,27 @@ require_once "user.php";
 			return NULL;
 		}
 		
-		if($can_read)
-			$database->give_view_access($node_id,$user->user_id);
-		if($can_write)
-			$database->give_edit_access($node_id,$user->user_id);
+		$usernames=explode(',',$users);
+		foreach($usernames as $username)
+		{
+			$usr=$database->get_user($username);
+			if($usr==NULL)
+				continue;
+			error_log("sharing with $usr->username");
+
+			if($can_read)
+				$database->give_view_access($node_id,$usr->user_id);
+			if($can_write)
+				$database->give_edit_access($node_id,$usr->user_id);
+
+			error_log("home directory is $usr->home_directory");
+			$share_id=$database->get_node_id("share",$usr->home_directory);
+			if($share_id==NULL)
+			{
+				error_log("could not find share directory for $username");
+			}
+			$database->link_nodes($share_id,$node_id,$filename,"this was shared to you");
+		}
 		if($use_https)
 		{
 			return "https://".$domain_name."/php/share.php?file=".$shared_node->code;
