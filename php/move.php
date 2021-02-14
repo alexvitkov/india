@@ -13,7 +13,9 @@ if (!isset($_POST['old_folder']) || !isset($_POST['new_folder']) || !isset($_POS
 	exit(1);
 }
 
+/*filename as we want it to be in the directory*/
 $new_filename = $_POST["filename"];
+/*filename as it is in the directory*/
 $old_filename = $_POST["filename"];
 
 if (isset($_POST['new_filename']))
@@ -28,7 +30,8 @@ $old_dir = get_directory($old_folder, $user);
 $new_dir = get_directory($new_folder, $user);
 $trash_dir = get_directory("/trash",$user);
 $share_dir = get_directory("/share",$user);
-if (!$old_dir || !$new_dir || $old_dir==$user->home_directory || $old_dir==$trash_dir || $old_dir==$share_dir) {
+
+if (!$old_dir || !$new_dir || ($old_dir==$user->home_directory && ($old_filename=="share" || $old_filename=="trash"))) {
     error_log("invalid src/dst dir");
 	http_response_code(409);
     exit(0);
