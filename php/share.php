@@ -9,8 +9,9 @@ session_start();
 
 if($_SERVER["REQUEST_METHOD"] == "POST")
 {
-	if(!isset($_SESSION['user_object']) || !isset($_POST["folder"]) || !isset($_POST["filename"]) || !isset($_POST["users"]) || !isset($_POST["password"]) || !isset($_POST["premissions"]) )
+	if(!isset($_SESSION['user_object']) || !isset($_POST["folder"]) || !isset($_POST["filename"]) || !isset($_POST["users"]) || !isset($_POST["password"]) || !isset($_POST["permissions"]) )
 	{
+		error_log("things are not set quite right");
 		http_response_code(409);
 		exit(0);
 	}
@@ -21,6 +22,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 	$users=$_POST["users"];
 	$password=$_POST["password"];
 	$permissions=$_POST["permissions"];
+
 
 	if($permissions==1)
 	{
@@ -72,21 +74,46 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 		http_response_code(409);
 		exit(0);
 	}
-	$permissions=$database->get_permissions($shared_node->node_id,$user->user_id);
-	if($permissions["can_view"]==true)
+	if(isset($_SESSION["user_object"]))
 	{
-		$node=$database->get_node($shared_node->node_id);
-		if($node->is_directory)
+		$user=$_SESSION["user_object"];
+		$permissions=$database->get_permissions($shared_node->node_id,$user->user_id);
+		if($permissions["can_view"]==true)
 		{
-			/*spooky stuff here*/
-			http_response_code(409);
-			exit(1);
+			$node=$database->get_node($shared_node->node_id);
+			if($node->is_directory)
+			{
+				/*spooky stuff here*/
+				http_response_code(409);
+				exit(1);
+			}else
+			{
+				header("Content-type: $node->type");
+				readfile("$storage_root/$node->code");
+			}
+		}
+	}else
+	{
+		if($shared_node->is_public==true)
+		{
+			$node=$database->get_node($shared_node->node_id);
+			if($node->is_directory)
+			{
+				/*spooky stuff here*/
+				http_response_code(409);
+				exit(1);
+			}else
+			{
+				header("Content-type: $node->type");
+				readfile("$storage_root/$node->code");
+			}
 		}else
 		{
-			header("Content-type: $node->type");
-			readfile("$storage_root/$node->code");
+			http_response_code(409);
+			exit(1);
 		}
 	}
+
 
 
 

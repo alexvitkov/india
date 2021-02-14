@@ -15,6 +15,7 @@ require_once "user.php";
 		public $node_id;
 		public $code;
 		public $password;
+		public $is_public;
 	}
 	/*path is in terms of the simulated filesystem*/
 	/*returns NULL on error*/

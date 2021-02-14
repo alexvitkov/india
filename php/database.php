@@ -472,11 +472,14 @@ require_once "node.php";
 			$prep->bindParam(':code',$code);
 			if($users=="")
 			{
-				$prep->bindParam(':is_public',true);
+				$is_public=1;
 			}else
 			{
-				$prep->bindParam(':is_public',false);
+				$is_public=0;
+				error_log("shared with $users is set to public=$is_public");
 			}
+			$prep->bindParam(':is_public',$is_public);
+
 			if($prep->execute()==false)
 			{
 				error_log("could not create shared node in create_shared_node");
@@ -620,6 +623,7 @@ require_once "node.php";
 			$nod->node_id=$ret["node_id"];
 			$nod->password=$ret["passcode"];
 			$nod->code=$ret["code"];
+			$nod->is_public=$ret["is_public"];
 			return $nod;
 		}
 
