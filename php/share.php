@@ -32,8 +32,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 		exit(1);
 	}
 
-	//$share_link=create_share_link($path,$filename,$password,$user,$can_read,$can_write);
-	$share_link=create_share_link($path,$filename,$password,$user,true,true);
+	$share_link=create_share_link($path,$filename,$password,$user,$can_read,$can_write);
+	//$share_link=create_share_link($path,$filename,$password,$user,true,true);
 
 
 	if($share_link==NULL)
