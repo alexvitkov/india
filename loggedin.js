@@ -377,8 +377,16 @@ function opendir() {
         // Folders come first, then files, then the special trash directory
         // Everything inside the categories is lexically sorted
         files.sort((a, b) => {
-            if (get_path() == "/" && a.filename == "trash")
-                return 2;
+            console.log(focus)
+            if (focus.pwd.length == 0 && a.filename == "share")
+                return -10;
+            if (focus.pwd.length == 0 && b.filename == "share")
+                return 10;
+
+            if (focus.pwd.length == 0 && a.filename == "trash")
+                return 10;
+            if (focus.pwd.length == 0 && b.filename == "trash")
+                return -10;
             if (a.is_directory && !b.is_directory)
                 return -1;
             if (!a.is_directory && b.is_directory)
@@ -461,6 +469,8 @@ function move_file(new_folder, filename, new_filename) {
     data.append('new_folder',  new_folder);
     data.append('filename',    filename);
     data.append('new_filename',new_filename);
+
+    console.log(get_path(), new_folder, filename, new_filename);
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/move.php', true);
@@ -757,7 +767,7 @@ function download_file(in_file, filename) {
         var url = URL.createObjectURL(blob);
         var a = document.createElement('a');
         a.href = url;
-        a.download = "filename";
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         setTimeout(() => {
@@ -830,6 +840,7 @@ function add_file_visuals(fileview) {
 
     // Is the current filewview the trash folder itself?
     var is_trash    = focus.pwd.length == 0 && fileview.filename == "trash";
+    var is_share    = focus.pwd.length == 0 && fileview.filename == "share";
 
     var visuals = mk(focus.filegrid, 'div');
     fileview.visuals = visuals;
@@ -840,6 +851,8 @@ function add_file_visuals(fileview) {
     if (fileview.is_directory) {
         if (get_path() == "/" && fileview.filename == "trash")
             img.src="/mimeicons/user-trash.png";
+        else if (get_path() == "/" && fileview.filename == "share")
+            img.src = "/mimeicons/user-share.png";
         else
             img.src="/mimeicons/directory.png";
     } else {
@@ -867,7 +880,7 @@ function add_file_visuals(fileview) {
                 // If we're in the trash, we can restore files or delete them forever
                 context_list.push(['Restore', () => {  restore_from_trash(fileview.filename); }]);
                 context_list.push(['Delete forever', () => { delete_file(fileview.filename); }]);
-            } else if (!is_trash) {
+            } else if (!is_trash && !is_share) {
                 // If we;'re not in trash we can rename/share/download/move files to trash
                 context_list.push(
                     ['Rename', () => { rename_file(fileview.filename); }],
@@ -890,7 +903,7 @@ function add_file_visuals(fileview) {
     }
 
     visuals.ondragstart = (e) => {
-        if (is_trash || is_in_trash) {
+        if (is_trash || is_in_trash || is_share) {
             e.preventDefault();
             return;
         }
@@ -904,10 +917,13 @@ function add_file_visuals(fileview) {
                 if (get_path() == "/" && fileview.filename == "trash") {
                     // If we've dragged something onto the trashcan, it's trash
                     move_to_trash(dragging_fileview.filename);
+                } 
+                else if (get_path() == "/" && fileview.filename == "share") {
+                    // move to 'share' is invalid
                 } else {
                     // If we've dragged something onto a directory, move it into that directory
                     move_file(path_combine(get_path(), fileview.filename), dragging_fileview.filename);
-                }
+                } 
             } else {
                 // alert(`Dropped ${dst.filename} on ${src.filename}`);
             }
@@ -924,7 +940,11 @@ function add_file_visuals(fileview) {
         filename.innerText = split[split.length - 1];
     } else if (is_trash) {
         filename.innerText = "Trash";
-    } else {
+    } else if (is_share) {
+        var x = mk(filename, 'span');
+        x.style.fontSize = "0.8rem";
+        x.innerText = "Shared with me";
+    } else{
         filename.innerText = fileview.filename;
     }
 
