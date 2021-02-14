@@ -428,8 +428,10 @@ function drop_handler(dst, src) {
 
 function add_link_functionality(link, length) {
     link.onclick = (e) => {
-        focus.pwd.length = length,
+        if (length < focus.pwd.length) {
+            focus.pwd.length = length;
             openfile(true);
+        }
     }
 
     link.onmouseup = (e) => {
@@ -525,8 +527,18 @@ function mkcheckbox(parent, label, togglefn) {
 function make_share_window(folder, filename) {
     var wnd = make_window_base(null, 400, 400, 400, 0);
 
-    wnd.h2.innerText = "Share " + filename;
-    wnd.h2.style.padding = "0.2rem 0.4rem";
+    wnd.h2.style.padding = "0.0rem 0rem 0.0rem 0.8rem";
+    wnd.h2.style.display = 'flex';
+
+    var heading = mk(wnd.h2, 'span');
+    heading.innerText = "Share " + filename;
+    heading.style.display = 'flex';
+    heading.style.alignItems = 'center';
+    heading.style.flex = "1 1 0";
+
+    var x_button = mk(wnd.h2, 'button', 'close_button');
+    x_button.innerText = "X";
+    x_button.onclick = delete_window;
 
     wnd.foldercontents = mk(wnd.visuals, 'div', 'share_dialog_contents');
     wnd.foldercontents.style.padding = "0.5rem";
@@ -755,7 +767,6 @@ function add_file_visuals(fileview) {
                     );
                 }
                 context_list.push(
-                    ['Share',  () => { share(false, fileview.filename); }],
                     ['Delete', () => { move_to_trash(fileview.filename); }]
                 );
             }

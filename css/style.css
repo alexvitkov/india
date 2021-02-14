@@ -403,7 +403,11 @@ input[type=submit]:hover {
     align-self: center;
 }
 
-.pathentry:hover {
+.pathentry:last-child {
+    cursor: inherit;
+}
+
+.pathentry:not(:last-child):hover {
     text-decoration: underline;
 }
 
@@ -452,4 +456,12 @@ input[type=submit]:hover {
     flex-direction: column;
     background: white;
 	background: rgba(255,255,255, 0.9);
+}
+
+.window > h2 .close_button {
+    border-left: 1px solid #ccc;
+}
+
+.close_button:hover {
+    background: white;
 }
