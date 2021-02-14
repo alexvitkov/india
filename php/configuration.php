@@ -1,30 +1,28 @@
 <?php
-/*should be placed outside of document root*/
 
-$use_https=true;
+$use_https = false;
 
-if (file_exists("/home/alex")) {
-	$domain_name="localhost";
-	$database_name="alex";
-	$database_username="alex";
-	$database_password="lol";
-	$database_location="127.0.0.1";
+// The server needs to know its domain name so it can generate download links
+$domain_name="localhost";
 
-	$storage_root = "/home/alex/fileup_storage";
-}
-else {
-	$domain_name="testing";
-	$database_name="fileup_testing";
-	$database_username="outsider";
-	$database_password="parola123";
-	$database_location="localhost";
-	/*storage root must be in the webroot*/
-	$storage_root = "/srv/apache/testing/project/files/";
-}
+// MySQL database name/user/password location
+// VOLATILE - database_name is hard coded in INIT_DATABASE.sql, if you change it here you MUST change that as well
+$database_name="fileup";
+$database_username="root";
+$database_password="";
+$database_location="127.0.0.1";
 
-/*if we save deleted files just in case of an error*/
+// This directory MUST exist and PHP's configuration must be able to read/write/delete files inside it
+$storage_root = "C:\\fileup_storage";
+
+
+// Are we using the /trash directory?
 $has_trash=true;
+
 $password_hash_algo=PASSWORD_BCRYPT;
 
 $has_email_verification=false;
+
+@include_once("$_SERVER[HOME]/.fileup.config.php");
+
 ?>
