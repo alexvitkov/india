@@ -142,6 +142,7 @@ function on_file_added(_e) {
             filename_input.value          = override_file_filename;
             override_input.value          = "1";
             upload_parent_directory.value = override_file_path;
+            console.log(filename_input.value, override_input.value, upload_parent_directory.value);
         } else {
             filename_input.value          = the_file.files[0].name;
             override_input.value          = "0";
@@ -398,7 +399,6 @@ function opendir() {
         files = [];
 
         var json = JSON.parse(xhr.responseText);
-        console.log(json);
         if (!json)
             return;
 

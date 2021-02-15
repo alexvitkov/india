@@ -41,6 +41,7 @@ if($codename=="filename taken" && $overwrite!=1)
 	http_response_code(409);
 	exit(0);
 }
+unlink("$storage_root/$codename");
 move_uploaded_file($file['tmp_name'], "$storage_root/$codename");
 
 http_response_code(200);
