@@ -523,9 +523,10 @@ require_once "node.php";
 
 		}
 		/*returns the file name as it must be in the filesystem relative to the storage root*/
-		function create_file_node(string $filename,string $note,int $dir_id,string $mimetype,User $user): string
+		function create_file_node(string $filename,string $note,int $dir_id,string $mimetype,User $user,$overwrite)
 		{
 			global $storage_root;
+			if($filename==NULL)return "error";
 			/*checkout the directory*/
 			$dir_prep=$this->pdo->prepare("
 							select 
@@ -540,38 +541,60 @@ require_once "node.php";
 			if($dir_prep->execute()==false)
 			{
 				error_log("could not exedude dir sql statement in create_file_node");
-				return "error";
+				return -1;
 		        }
 
 			$dir=$dir_prep->fetch(PDO::FETCH_ASSOC);
 			if($dir == false)
 			{
 				error_log("create_file_node dir isnt a directory");
-				return "error";
+				return -1;
 			}
 			if($dir["is_directory"]==false)
 			{
 				/*remove this TODO*/
 				error_log("create_file_node: dir is not a directory directory=".print_r($dir).gettype($dir));
-				return "error";
+				return -1;
 			}
 			if($dir["can_edit"]==false)
 			{
 				/*TODO*/
 				/*remove this TODO*/
 				error_log("create_file_node: dir is not modifiable");
-				return "error";
+				return -1;
 			}
 
 			/*check if node with given name exists*/
-			if($this->check_if_name_is_taken($filename,$dir_id))
+			//if($this->check_if_name_is_taken($filename,$dir_id))
+			$node_id=$this->get_node_id($filename,$dir_id);
+			if($node_id!=NULL)
 			{
-				error_log("filename taken");
-				return "filename taken";
+				if($overwrite==1)
+				{
+					$code=$this->get_code_of_node($node_id);
+					$prepare=$this->pdo->prepare("
+							update nodes
+							set type=:type
+							where node_id=:id
+							");
+					$prepare->bindParam(':type',$mimetype);
+					$prepare->bindParam(':id',$node_id);
+					if($prepare->execute()==false)
+					{
+						error_log("could not rewrite filenode in create_file_node");
+						return "error";
+					}else
+					{
+						return $code;
+					}
+				}else
+				{
+					error_log("filename taken");
+					return "filename taken";
+				}
 			}
 			/*generate the node*/
 			$code=$this->get_random_node_name("");
-			if($filename==NULL)return "error";
 			$prep=$this->pdo->prepare("insert into nodes(is_directory,relative_path,code,type)
 						   values(false,:root,:code,:type)
 						   ");

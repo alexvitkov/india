@@ -29,14 +29,14 @@ if (!$dir)
     exit(0);
 }
 
-$codename=$database->create_file_node($filename,"",$dir,$mimetype,$user);
+$codename=$database->create_file_node($filename,"",$dir,$mimetype,$user,$overwrite);
 if($codename=="error")
 {
 	error_log("could not create file_node in upload.php");
 	http_response_code(409);
 	exit(0);
 }
-if($codename=="filename taken" && $overwrite!=1)
+if($codename=="filename taken")
 {
 	http_response_code(409);
 	exit(0);
