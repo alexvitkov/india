@@ -318,8 +318,6 @@ function openfile_nondir() {
         xhr.responseType = 'arraybuffer';
         xhr.onload = function () {
             let b = `data:image/png;base64,${base64ArrayBuffer(xhr.response)}`;
-
-
             focus.filecontents.style.backgroundImage = `url('${b}')`;
             focus.filecontents.classList.add('imgview');
             focus.filecontents.innerText = "asdf";
@@ -329,8 +327,11 @@ function openfile_nondir() {
         focus.filecontents.classList.remove('imgview');
         focus.filecontents.style.backgroundImage = "unset";
 
+        var pre = mk(focus.filecontents, 'pre');
+
         xhr.onload = function () {
-            focus.filecontents.innerText = xhr.responseText;
+            pre.innerText = xhr.responseText;
+            pre.contentEditable = "true";
         };
     }
 

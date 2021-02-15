@@ -307,6 +307,10 @@ input[type=submit]:hover {
 	background: white;
 }
 
+.filecontents {
+    font-family: monospace;
+}
+
 .filecontents.imgview {
     background-color: black;
     background-repeat: no-repeat;
@@ -319,8 +323,17 @@ input[type=submit]:hover {
 }
 
 .filecontents {
-    padding: 0.8rem;
-    font-size: 1.1rem;
+    overflow-y: scroll;
+}
+[contenteditable] {
+  outline: 0px solid transparent;
+}
+
+pre {
+    font-size: 1.3rem;
+    min-height: 100%;
+    margin: 0.3rem;
+    box-sizing: border-box;
 }
 
 .window h3,
