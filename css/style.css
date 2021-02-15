@@ -176,7 +176,7 @@ form > h2 {
     background: white;
 }
 
-.window h3 > .separator {
+.window h3 .separator {
     flex: 0 0 1px;
     align-self: stretch;
     background: #bbb;
