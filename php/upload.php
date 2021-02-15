@@ -6,7 +6,7 @@ require_once "user.php";
 require_once "node.php";
 session_start();
 
-if (!isset( $_POST["filename"]) || !isset($_FILES["the_file"]) || !isset($_POST['parent_directory']) || !isset($_POST['overwrite']))
+if (!isset( $_POST["filename"]) || (!isset($_FILES["the_file"]) && (!isset($_POST['content'] || gettype($_POST['content'])!="string"))|| !isset($_POST['parent_directory']) || !isset($_POST['overwrite']))
 {
 	error_log("someone tried to upload something impropperly");
 	http_response_code(400);
@@ -41,8 +41,14 @@ if($codename=="filename taken")
 	http_response_code(409);
 	exit(0);
 }
-unlink("$storage_root/$codename");
-move_uploaded_file($file['tmp_name'], "$storage_root/$codename");
+if(isset($_POST['content']))
+{
+	file_put_contents("$storage_root/$codename",$_POST['content']);
+}else
+{
+	unlink("$storage_root/$codename");
+	move_uploaded_file($file['tmp_name'], "$storage_root/$codename");
+}
 
 http_response_code(200);
 exit(0);
