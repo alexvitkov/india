@@ -15,7 +15,6 @@ class FileView {
 }
 
 // An array of all fileviews currently open
-var files = [];
 
 class Window {
     constructor(pwd) {
@@ -23,6 +22,7 @@ class Window {
         this.visuals = null; // The DOM object
         this.h2 = null;      // The titlebar of the window
         this.fileview = null;
+        this.files = [];
     }
 }
 
@@ -309,7 +309,7 @@ function read_file_contents(text, cb, folder, filename) {
 function openfile_nondir() {
     var mimetype = "text/plain";
 
-    for (const f of files) {
+    for (const f of focus.files) {
         if (f.filename == focus.pwd[focus.pwd.length - 1])
             mimetype = f.mimetype;
     }
@@ -394,9 +394,9 @@ function opendir() {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/readdir.php', true);
     xhr.onload = function () {
-        for (const f of files)
+        for (const f of focus.files)
             f.visuals.remove();
-        files = [];
+        focus.files = [];
 
         var json = JSON.parse(xhr.responseText);
         if (!json)
@@ -408,13 +408,13 @@ function opendir() {
                                     f.mimetype, 
                                     f.is_directory && f.is_directory != "0", 
                                     f.can_edit     && f.can_edit     != "0");
-            files.push(view);
+            focus.files.push(view);
         }
 
         // Sort the files nicely before adding their visuals
         // Folders come first, then files, then the special trash directory
         // Everything inside the categories is lexically sorted
-        files.sort((a, b) => {
+        focus.files.sort((a, b) => {
             if (focus.pwd.length == 0 && a.filename == "share")
                 return -10;
             if (focus.pwd.length == 0 && b.filename == "share")
@@ -431,7 +431,7 @@ function opendir() {
             return a.filename.localeCompare(b.filename);
         });
 
-        for (const f of files) {
+        for (const f of focus.files) {
             add_file_visuals(f);
         }
 
