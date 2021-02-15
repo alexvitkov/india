@@ -1,3 +1,4 @@
+
 html, body {
 	margin: 0;
 	height: 100%;
@@ -306,6 +307,17 @@ input[type=submit]:hover {
 	background: white;
 }
 
+.filecontents.imgview {
+    background-color: black;
+    background-repeat: no-repeat;
+    background-position: center; 
+}
+
+.filecontentsroot, .foldercontents {
+    display: flex;
+    flex-direction: column;
+}
+
 .filecontents {
     padding: 0.8rem;
     font-size: 1.1rem;
@@ -465,3 +477,4 @@ input[type=submit]:hover {
 .close_button:hover {
     background: white;
 }
+
