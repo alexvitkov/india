@@ -22,6 +22,7 @@ class Window {
         this.pwd = pwd;      // pwd = [ "Folder1", "Folder2" ] means the current directory of that window is /Folder1/Folder2
         this.visuals = null; // The DOM object
         this.h2 = null;      // The titlebar of the window
+        this.fileview = null;
     }
 }
 
@@ -343,11 +344,11 @@ function openfile_nondir() {
         focus.filecontents.classList.remove('imgview');
         focus.filecontents.style.backgroundImage = "unset";
 
-        var pre = mk(focus.filecontents, 'pre');
+        wnd.pre = mk(focus.filecontents, 'pre');
 
         xhr.onload = function () {
-            pre.innerText = xhr.responseText;
-            pre.contentEditable = "true";
+            wnd.pre.innerText = xhr.responseText;
+            wnd.pre.contentEditable = "true";
         };
     }
 
@@ -860,7 +861,7 @@ function make_window(pwd) {
         mk(h3, 'div', 'separator');
 
         let replace_btn = mk(h3, 'button');
-        replace_btn.innerText = "Save";
+        replace_btn.innerText = "Save Changes";
         replace_btn.onclick = () => { alert("No implemento"); }
         mk(h3, 'div', 'separator');
 
