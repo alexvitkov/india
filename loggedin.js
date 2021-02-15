@@ -348,7 +348,8 @@ function openfile_nondir() {
 
         xhr.onload = function () {
             focus.txt_editor.innerText = xhr.responseText;
-            focus.txt_editor.contentEditable = "true";
+            if (open_file.write_permissions)
+                focus.txt_editor.contentEditable = "true";
         };
     }
 
