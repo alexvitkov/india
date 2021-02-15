@@ -27,7 +27,7 @@ if (!$dir) {
 }
  
 // Check if the new filename is taken in the new dir
-$contents_of_dir = $database->get_links_of($dir);
+$contents_of_dir = $database->get_links_of($dir,$user->user_id);
 foreach ($contents_of_dir as $c) {
     if ($c['name'] == $new_filename) {
         error_log("/php/rename.php failed - filename $filename taken in $new_folder");
@@ -38,7 +38,7 @@ foreach ($contents_of_dir as $c) {
 
 // Get the file node
 $file_node = null;
-$contents_of_old_dir = $database->get_links_of($dir);
+$contents_of_old_dir = $database->get_links_of($dir,$user->user_id);
 foreach ($contents_of_old_dir as $c) {
     if ($c['name'] == $old_filename) {
         $file_node = $c['id'];

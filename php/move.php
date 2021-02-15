@@ -38,7 +38,7 @@ if (!$old_dir || !$new_dir || ($old_dir==$user->home_directory && ($old_filename
 }
  
 // Check if the filename is taken in the new dir
-$contents_of_new_dir = $database->get_links_of($new_dir);
+$contents_of_new_dir = $database->get_links_of($new_dir,$user->user_id);
 foreach ($contents_of_new_dir as $c) {
     if ($c['name'] == $new_filename) {
         error_log("filename $new_filename taken in $new_folder");
@@ -49,7 +49,7 @@ foreach ($contents_of_new_dir as $c) {
 
 // Get the file node
 $file_node = null;
-$contents_of_old_dir = $database->get_links_of($old_dir);
+$contents_of_old_dir = $database->get_links_of($old_dir,$user->user_id);
 foreach ($contents_of_old_dir as $c) {
     if ($c['name'] == $old_filename) {
         $file_node = $c['id'];
