@@ -69,11 +69,23 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 	}
 
 	$shared_node=$database->get_shared_node($code);
-	if($shared_node==NULL || $shared_node->password!=$password)
+	if($shared_node==NULL)
 	{
 		http_response_code(409);
 		exit(0);
 	}
+    if ($shared_node->password!=$password) {
+        if ($password == "") 
+        {
+            require_once("../share_frontend.php");
+            exit(0);
+        }else 
+        {
+            echo "Invalid password";
+		    http_response_code(409);
+		    exit(0);
+        }
+    }
 	if(isset($_SESSION["user_object"]))
 	{
 		$user=$_SESSION["user_object"];
