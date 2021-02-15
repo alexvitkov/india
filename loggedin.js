@@ -344,11 +344,11 @@ function openfile_nondir() {
         focus.filecontents.classList.remove('imgview');
         focus.filecontents.style.backgroundImage = "unset";
 
-        wnd.pre = mk(focus.filecontents, 'pre');
+        var pre = mk(focus.filecontents, 'pre');
 
         xhr.onload = function () {
-            wnd.pre.innerText = xhr.responseText;
-            wnd.pre.contentEditable = "true";
+            pre.innerText = xhr.responseText;
+            pre.contentEditable = "true";
         };
     }
 
