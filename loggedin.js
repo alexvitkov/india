@@ -5,11 +5,12 @@ var FORM_ASYNC = true;
 
 // A FileView is an entry inside the explorer window
 class FileView {
-    constructor(filename, visuals, mimetype, is_directory) {
+    constructor(filename, visuals, mimetype, is_directory, write_permissions) {
         this.filename     = filename;
         this.visuals      = visuals; // The DOM object with the icon and the filenam text
         this.mimetype     = mimetype;
         this.is_directory = is_directory;
+        this.write_permissions = write_permissions;
     }
 }
 
@@ -34,8 +35,16 @@ var focus = null;
 const upload_form    = document.getElementById("upload_form");
 const the_file       = document.getElementById("the_file");
 const filename_input = document.getElementById("filename");
+const override_input = document.getElementById("override_input");
 const current_directory       = document.getElementById("current_directory");
 const upload_parent_directory = document.getElementById("upload_parent_directory");
+
+// If this is set to true, requests to uploads.php will be sent with the "override" flag
+// which will override existing files with the same name
+var override_file = false;
+var override_file_filename = "";
+var override_file_path = "";
+
 
 // Some elements have custom right click context menus
 // If there's a custom context menu active, this will be it
@@ -107,7 +116,7 @@ function context(e, entries) {
         e.stopPropagation();
     }
     
-    context_menu.onclick = (e) => {
+    context_menu.onclick = (_e) => {
         context_menu.remove();
         context_menu = null;
     }
@@ -124,12 +133,19 @@ function context(e, entries) {
     }
 }
 
-
 // This is called whenever the <input type="file">'s value changes
 function on_file_added(_e) {
     if (the_file.files.length >= 1) {
-        filename_input.value          = the_file.files[0].name;
-        upload_parent_directory.value = get_path();
+
+        if (override_file) {
+            filename_input.value          = override_file_filename;
+            override_input.value          = "1";
+            upload_parent_directory.value = override_file_path;
+        } else {
+            filename_input.value          = the_file.files[0].name;
+            override_input.value          = "0";
+            upload_parent_directory.value = get_path();
+        }
 
         if (!FORM_ASYNC) {
             upload_form.submit();
@@ -237,7 +253,7 @@ function update_path_visuals() {
         entry.innerText = d;
 
         // When we click the entry, go to its folder
-        entry.onclick = (e) => {
+        entry.onclick = (_e) => {
             if (length < focus.pwd.length) {
                 focus.pwd.length = i + 1;
                 openfile(true);
@@ -351,6 +367,21 @@ function share(in_file, filename) {
     focus_window(wnd);
 }
 
+// Replace an existing file with a new one
+function replace_file(in_file, filename) {
+    if (in_file) {
+        var folder = get_path(focus.pwd.length - 1);
+        filename = focus.pwd[focus.pwd.length - 1];
+    } else {
+        var folder = get_path();
+    }
+
+    override_file = true;
+    override_file_path     = folder;
+    override_file_filename = filename;
+    the_file.click();
+}
+
 // This loads the contents of the current directory
 function opendir() {
     update_path_visuals();
@@ -371,7 +402,7 @@ function opendir() {
 
         // Create the FileViews from the json response
         for (const f of json) {
-            var view = new FileView(f.name, null, f.mimetype, f.is_directory && f.is_directory != "0");
+            var view = new FileView(f.name, null, f.mimetype, f.is_directory && f.is_directory != "0", true);
             files.push(view);
         }
 
@@ -379,7 +410,6 @@ function opendir() {
         // Folders come first, then files, then the special trash directory
         // Everything inside the categories is lexically sorted
         files.sort((a, b) => {
-            console.log(focus)
             if (focus.pwd.length == 0 && a.filename == "share")
                 return -10;
             if (focus.pwd.length == 0 && b.filename == "share")
@@ -471,8 +501,6 @@ function move_file(new_folder, filename, new_filename) {
     data.append('new_folder',  new_folder);
     data.append('filename',    filename);
     data.append('new_filename',new_filename);
-
-    console.log(get_path(), new_folder, filename, new_filename);
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/move.php', true);
@@ -580,7 +608,7 @@ function make_window_base(pwd, x, y, w, h) {
 
     wnd.h2 = mk(wnd.visuals, 'h2');
 
-    wnd.visuals.onmousedown = (e) => { 
+    wnd.visuals.onmousedown = (_e) => { 
         focus_window(wnd); 
     }
 
@@ -625,7 +653,7 @@ function mkcheckbox(parent, label, togglefn) {
 
     var write_checkbox_label = mk(hdiv, 'label');
     write_checkbox_label.innerText = label;
-    write_checkbox_label.onclick = (e) => { write_checkbox.click(); }
+    write_checkbox_label.onclick = (_e) => { write_checkbox.click(); }
     write_checkbox_label.classList.add('noselect');
 
     write_checkbox.onchange = (_e) => {
@@ -680,14 +708,14 @@ function make_share_window(folder, filename) {
     add_user.style.display = "none";
 
     // When we hit 'Add user', add an input field for a new user
-    add_user.onclick = (e) => {
+    add_user.onclick = (_e) => {
         var i = mk(userlist, 'input');
         i.value = 'John Doe';
 
         let index = data.userlist.length;
         data.userlist.push(i.value);
 
-        i.onchange = (e) => {
+        i.onchange = (_e) => {
             data.userlist[index] = i.value;
         }
     }
@@ -721,8 +749,6 @@ function make_share_window(folder, filename) {
     generate_url_button.innerText = "Generate link";
 
     generate_url_button.onclick = () => {
-        console.log(data);
-
         // The backend expects the users to be either an empty string, if the URL is public
         // or a comma separated list of usernaems
         var users = "";
@@ -782,7 +808,6 @@ function download_file(in_file, filename) {
 }
 
 
-
 // make_window creates an explorer window - the kind that can list directories/open files
 function make_window(pwd) {
     var wnd = make_window_base(pwd, 100, 100, 800, 600);
@@ -797,7 +822,11 @@ function make_window(pwd) {
 
         var upload_btn = mk(h3, 'button');
         upload_btn.innerText = "Upload";
-        upload_btn.onclick = () => { the_file.click(); }
+
+        upload_btn.onclick = () => { 
+            override_file = false; 
+            the_file.click(); 
+        }
 
         mk(h3, 'div', 'separator');
 
@@ -816,16 +845,19 @@ function make_window(pwd) {
         wnd.filecontentsroot = mk(wnd.visuals, 'div', 'filecontentsroot');
         var h3 = mk(wnd.filecontentsroot, 'h3');
 
-        var download_btn = mk(h3, 'button');
+        let download_btn = mk(h3, 'button');
         download_btn.innerText = "Download";
         download_btn.onclick = () => { download_file(true); }
-
         mk(h3, 'div', 'separator');
 
-        var download_btn = mk(h3, 'button');
-        download_btn.innerText = "Share";
-        download_btn.onclick = () => { share(true); }
+        let share_btn = mk(h3, 'button');
+        share_btn.innerText = "Share";
+        share_btn.onclick = () => { share(true); }
+        mk(h3, 'div', 'separator');
 
+        let replace_btn = mk(h3, 'button');
+        replace_btn.innerText = "Save";
+        replace_btn.onclick = () => { alert("No implemento"); }
         mk(h3, 'div', 'separator');
 
         wnd.filecontents = mk(wnd.filecontentsroot, 'div', 'filecontents');
@@ -888,6 +920,11 @@ function add_file_visuals(fileview) {
                     ['Rename', () => { rename_file(fileview.filename); }],
                 );
                 if (!fileview.is_directory) {
+                    if (fileview.write_permissions) {
+                        context_list.push(
+                            ['Replace',  () => { replace_file(false, fileview.filename); }],
+                        );
+                    }
                     context_list.push(
                         ['Share',    () => { share(false, fileview.filename); }],
                         ['Download', () => { download_file(false, fileview.filename); }],
@@ -1020,6 +1057,6 @@ document.body.oncontextmenu = (e) => {
     }
 }
 
-the_file.onchange = on_file_added;
+the_file.onchange = (e) => { on_file_added(e); };
 
 main();
