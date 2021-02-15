@@ -311,25 +311,27 @@ function openfile_nondir() {
     xhr.open('POST', '/php/readfile.php', true);
 
     focus.filecontents.innerText = "";
-    focus.filecontentsroot.style.display = 'block';
+    focus.filecontentsroot.style.display = 'flex';
     focus.foldercontents.style.display   = 'none';
 
     if (mimetype.split("/")[0] == "image") {
         xhr.responseType = 'arraybuffer';
         xhr.onload = function () {
-            var b = base64ArrayBuffer(xhr.response);
-            var image = new Image();
-            image.src = `data:image/png;base64,${b}`;
-            image.style.minWidth = "0px";
-            image.style.minHeight = "0px";
-
-            focus.filecontents.appendChild(image);
-            focus.filecontents.display = "flex";
+            let b = `data:image/png;base64,${base64ArrayBuffer(xhr.response)}`;
+            focus.filecontents.style.backgroundImage = `url('${b}')`;
+            focus.filecontents.classList.add('imgview');
+            focus.filecontents.innerText = "asdf";
         }
     }
     else {
+        focus.filecontents.classList.remove('imgview');
+        focus.filecontents.style.backgroundImage = "unset";
+
+        var pre = mk(focus.filecontents, 'pre');
+
         xhr.onload = function () {
-            focus.filecontents.innerText = xhr.responseText;
+            pre.innerText = xhr.responseText;
+            pre.contentEditable = "true";
         };
     }
 
@@ -402,7 +404,7 @@ function opendir() {
     xhr.send(data);
 
     focus.filecontentsroot.style.display = 'none';
-    focus.foldercontents.style.display   = 'block';
+    focus.foldercontents.style.display   = 'flex';
 }
 
 

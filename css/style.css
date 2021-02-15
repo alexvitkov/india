@@ -1,3 +1,4 @@
+
 html, body {
 	margin: 0;
 	height: 100%;
@@ -307,8 +308,32 @@ input[type=submit]:hover {
 }
 
 .filecontents {
-    padding: 0.8rem;
-    font-size: 1.1rem;
+    font-family: monospace;
+}
+
+.filecontents.imgview {
+    background-color: black;
+    background-repeat: no-repeat;
+    background-position: center; 
+}
+
+.filecontentsroot, .foldercontents {
+    display: flex;
+    flex-direction: column;
+}
+
+.filecontents {
+    overflow-y: scroll;
+}
+[contenteditable] {
+  outline: 0px solid transparent;
+}
+
+pre {
+    font-size: 1.3rem;
+    min-height: 100%;
+    margin: 0.3rem;
+    box-sizing: border-box;
 }
 
 .window h3,
@@ -465,3 +490,4 @@ input[type=submit]:hover {
 .close_button:hover {
     background: white;
 }
+

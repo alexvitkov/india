@@ -23,6 +23,6 @@ $password_hash_algo=PASSWORD_BCRYPT;
 
 $has_email_verification=false;
 
-@include_once("$_SERVER[HOME]/.fileup.config.php");
+@include_once("custom_configuration.php");
 
 ?>
