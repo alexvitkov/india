@@ -9,6 +9,7 @@ drop table if exists trash;
 drop table if exists super_trash;
 drop table if exists shared_nodes;
 drop table if exists nodes;
+drop table if exists email_verification_codes;
 
 
 
@@ -18,6 +19,7 @@ drop trigger if exists del_node;
 drop trigger if exists supper_del_node;
 
 
+drop view if exists usernames;
 
 
 
@@ -76,6 +78,14 @@ create table super_trash (
 	node_id int not null
 );
 
+create table email_verification_codes (
+			verification_id int not null auto_increment,
+			verification_code varchar(100) not null,
+			username varchar(50) not null unique,
+			password varchar(255) not null,
+			email varchar(50),
+			primary key (verification_id)
+		);
 
 create trigger delete_on_zero_links
 	after delete
@@ -113,4 +123,8 @@ create trigger delete_links
 		delete from node_links
 		where directory_id=old.node_id;
 
-
+create view usernames
+	as
+		select username from users
+		union
+		select username from email_verification_codes;
