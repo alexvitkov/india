@@ -745,6 +745,8 @@ function make_share_window(folder, filename) {
     password_label.innerText = "Password";
     var password_input = mk(password_container, 'input');
     password_input.type = 'password';
+    password_input.autocomplete = 'off'
+
     password_input.style.flex = "1 0 0";
     password_input.onchange = (_e) => {
         data.password = password_input.value;
@@ -910,6 +912,13 @@ function add_file_visuals(fileview) {
                 // Open is always in the context list
                 ['Open', () => {
                     focus.pwd.push(fileview.filename);
+                    openfile(fileview.is_directory);
+                }], 
+                ['Open in New Window', () => {
+                    var new_pwd = focus.pwd.slice();
+                    new_pwd.push(fileview.filename);
+                    var new_wnd = make_window(new_pwd);
+                    focus_window(new_wnd);
                     openfile(fileview.is_directory);
                 }], 
                 // ['Open in New Window', () => {alert('not implemented')}],

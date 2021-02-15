@@ -11,7 +11,7 @@
         </head>
     </head>
     <body>
-        <form method="GET" action="<?php echo "/php/share.php"; ?>">
+        <form method="GET" action="<?php echo "/php/share.php"; ?>" autocomplete="off">
             <h2>Fileup</h2>
             <div class="content">
                 This file is password protected.
