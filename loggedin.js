@@ -23,6 +23,7 @@ class Window {
         this.h2 = null;      // The titlebar of the window
         this.fileview = null;
         this.files = [];
+        this.txt_editor = null; // For editable text files, this is the DOM element the user can edit
     }
 }
 
@@ -46,7 +47,7 @@ var override_file = false;
 var override_file_filename = "";
 var override_file_path = "";
 
-var open_file_mimetype = null;
+var open_file = null;
 
 // Some elements have custom right click context menus
 // If there's a custom context menu active, this will be it
@@ -327,7 +328,10 @@ function openfile_nondir() {
     focus.filecontentsroot.style.display = 'flex';
     focus.foldercontents.style.display   = 'none';
 
-    if (open_file_mimetype.split("/")[0] == "image") {
+    let is_image = open_file.mimetype.split("/")[0] == "image";
+    focus.save_btn_container.style.display = (open_file.write_permissions && !is_image) ? "flex" : "none";
+
+    if (is_image) {
         xhr.responseType = 'arraybuffer';
         xhr.onload = function () {
             let b = `data:image/png;base64,${base64ArrayBuffer(xhr.response)}`;
@@ -340,11 +344,11 @@ function openfile_nondir() {
         focus.filecontents.classList.remove('imgview');
         focus.filecontents.style.backgroundImage = "unset";
 
-        var pre = mk(focus.filecontents, 'pre');
+        focus.txt_editor = mk(focus.filecontents, 'pre');
 
         xhr.onload = function () {
-            pre.innerText = xhr.responseText;
-            pre.contentEditable = "true";
+            focus.txt_editor.innerText = xhr.responseText;
+            focus.txt_editor.contentEditable = "true";
         };
     }
 
@@ -863,15 +867,33 @@ function make_window(pwd, has_close) {
         share_btn.onclick = () => { share(true); }
         mk(h3, 'div', 'separator');
 
-        let replace_btn = mk(h3, 'button');
-        replace_btn.innerText = "Save Changes";
-        replace_btn.onclick = () => { alert("No implemento"); }
-        mk(h3, 'div', 'separator');
+        wnd.save_btn_container = mk(h3, 'div');
+        wnd.save_btn_container.style.display = 'flex';
+
+        let save_btn = mk(wnd.save_btn_container, 'button');
+        save_btn.innerText = "Save";
+        save_btn.onclick = save_open_text_file;
+        mk(wnd.save_btn_container, 'div', 'separator');
 
         wnd.filecontents = mk(wnd.filecontentsroot, 'div', 'filecontents');
     }
 
     return wnd;
+}
+
+
+function save_open_text_file() {
+    const contents = focus.txt_editor.innerText;
+    let xhr = new XMLHttpRequest();
+    xhr.open('POST', '/php/upload.php', true);
+
+    var data = new FormData();
+    data.append('parent_directory', get_path (focus.pwd.length - 1));
+    data.append('filename',         focus.pwd[focus.pwd.length - 1]);
+    data.append('content',          contents);
+    data.append('overwrite',        '1');
+
+    xhr.send(data);
 }
 
 
@@ -903,8 +925,9 @@ function add_file_visuals(fileview) {
 
     fileview.visuals.onclick = () => {
         focus.pwd.push(fileview.filename);
-        if (!fileview.is_directory)
-            open_file_mimetype = fileview.mimetype;
+        if (!fileview.is_directory) {
+            open_file = fileview;
+        }
         openfile(fileview.is_directory);
     }
 
@@ -922,7 +945,7 @@ function add_file_visuals(fileview) {
                     new_pwd.push(fileview.filename);
                     var new_wnd = make_window(new_pwd, true);
                     focus_window(new_wnd);
-                    open_file_mimetype = fileview.mimetype;
+                    open_file = fileview;
                     openfile(fileview.is_directory);
                 }], 
             ];
