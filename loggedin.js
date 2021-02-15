@@ -46,6 +46,7 @@ var override_file = false;
 var override_file_filename = "";
 var override_file_path = "";
 
+var open_file_mimetype = null;
 
 // Some elements have custom right click context menus
 // If there's a custom context menu active, this will be it
@@ -307,12 +308,6 @@ function read_file_contents(text, cb, folder, filename) {
 // If the file has image/* mimetype, it will be displayed as an image
 // otherwise it will be displayed as plaintext
 function openfile_nondir() {
-    var mimetype = "text/plain";
-
-    for (const f of focus.files) {
-        if (f.filename == focus.pwd[focus.pwd.length - 1])
-            mimetype = f.mimetype;
-    }
 
     while (focus.filecontents.children.length > 0)
         focus.filecontents.removeChild(focus.filecontents.lastChild);
@@ -332,7 +327,7 @@ function openfile_nondir() {
     focus.filecontentsroot.style.display = 'flex';
     focus.foldercontents.style.display   = 'none';
 
-    if (mimetype.split("/")[0] == "image") {
+    if (open_file_mimetype.split("/")[0] == "image") {
         xhr.responseType = 'arraybuffer';
         xhr.onload = function () {
             let b = `data:image/png;base64,${base64ArrayBuffer(xhr.response)}`;
@@ -908,6 +903,8 @@ function add_file_visuals(fileview) {
 
     fileview.visuals.onclick = () => {
         focus.pwd.push(fileview.filename);
+        if (!fileview.is_directory)
+            open_file_mimetype = fileview.mimetype;
         openfile(fileview.is_directory);
     }
 
@@ -925,9 +922,9 @@ function add_file_visuals(fileview) {
                     new_pwd.push(fileview.filename);
                     var new_wnd = make_window(new_pwd, true);
                     focus_window(new_wnd);
+                    open_file_mimetype = fileview.mimetype;
                     openfile(fileview.is_directory);
                 }], 
-                // ['Open in New Window', () => {alert('not implemented')}],
             ];
 
             if (is_in_trash) {
