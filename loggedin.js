@@ -5,9 +5,9 @@ var FORM_ASYNC = true;
 
 // A FileView is an entry inside the explorer window
 class FileView {
-    constructor(filename, visuals, mimetype, is_directory, write_permissions) {
+    constructor(filename,  mimetype, is_directory, write_permissions) {
         this.filename     = filename;
-        this.visuals      = visuals; // The DOM object with the icon and the filenam text
+        this.visuals      = null; // The DOM object with the icon and the filenam text
         this.mimetype     = mimetype;
         this.is_directory = is_directory;
         this.write_permissions = write_permissions;
@@ -397,12 +397,16 @@ function opendir() {
         files = [];
 
         var json = JSON.parse(xhr.responseText);
+        console.log(json);
         if (!json)
             return;
 
         // Create the FileViews from the json response
         for (const f of json) {
-            var view = new FileView(f.name, null, f.mimetype, f.is_directory && f.is_directory != "0", true);
+            var view = new FileView(f.name, 
+                                    f.mimetype, 
+                                    f.is_directory && f.is_directory != "0", 
+                                    f.can_edit     && f.can_edit     != "0");
             files.push(view);
         }
 

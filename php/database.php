@@ -128,7 +128,7 @@ require_once "node.php";
 								nodes.code as code,
 								nodes.type as mimetype,
 								node_access.can_view as can_view,
-								node_access.can_view as can_eddit
+								node_access.can_edit as can_edit
 								from node_links
 								inner join nodes on
 									nodes.node_id=node_links.node_id
