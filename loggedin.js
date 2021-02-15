@@ -816,10 +816,16 @@ function download_file(in_file, filename) {
 
 
 // make_window creates an explorer window - the kind that can list directories/open files
-function make_window(pwd) {
+function make_window(pwd, has_close) {
     var wnd = make_window_base(pwd, 100, 100, 800, 600);
 
     path = mk(wnd.h2, 'div', 'path');
+
+    if (has_close) {
+        var x_button = mk(wnd.h2, 'button', 'close_button');
+        x_button.innerText = "X";
+        x_button.onclick = delete_window;
+    }
 
     // wnd.foldercontents is where the FileViews will be stored
     // it also has a subheader (h3) with 'Upload' and 'New FOlder' buttons
@@ -917,7 +923,7 @@ function add_file_visuals(fileview) {
                 ['Open in New Window', () => {
                     var new_pwd = focus.pwd.slice();
                     new_pwd.push(fileview.filename);
-                    var new_wnd = make_window(new_pwd);
+                    var new_wnd = make_window(new_pwd, true);
                     focus_window(new_wnd);
                     openfile(fileview.is_directory);
                 }], 
