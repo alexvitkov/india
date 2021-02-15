@@ -6,7 +6,7 @@ require_once "user.php";
 require_once "node.php";
 session_start();
 
-if (!isset( $_POST["filename"]) || !isset($_FILES["the_file"]) || !isset($_POST['parent_directory']))
+if (!isset( $_POST["filename"]) || !isset($_FILES["the_file"]) || !isset($_POST['parent_directory']) || !isset($_POST['overwrite']))
 {
 	error_log("someone tried to upload something impropperly");
 	http_response_code(400);
@@ -19,6 +19,7 @@ $parent_directory=$_POST["parent_directory"];
 $user=$_SESSION['user_object'];
 $homedir=$user->home_directory;
 $mimetype=file_type($file['tmp_name']);
+$overwrite=$_POST['overwrite'];
 
 $dir = get_directory($parent_directory, $user);
 if (!$dir) 
@@ -35,7 +36,7 @@ if($codename=="error")
 	http_response_code(409);
 	exit(0);
 }
-if($codename=="filename taken")
+if($codename=="filename taken" && $overwrite!=1)
 {
 	http_response_code(409);
 	exit(0);
