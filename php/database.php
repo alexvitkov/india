@@ -117,7 +117,8 @@ require_once "node.php";
 		}
 		/* I think this only makes sense if node is a dir*/
 		/* returns assoc array of nodes*/
-		function get_links_of(int $node_id)
+		/* returns permissions as well*/
+		function get_links_of(int $node_id,int $user_id)
 		{
 			$statement=$this->pdo->prepare("
 							select node_links.node_id as id,
@@ -125,13 +126,20 @@ require_once "node.php";
 								node_links.note as note,
 								nodes.is_directory as is_directory,
 								nodes.code as code,
-								nodes.type as mimetype
+								nodes.type as mimetype,
+								node_access.can_view as can_view,
+								node_access.can_view as can_eddit
 								from node_links
 								inner join nodes on
-								nodes.node_id=node_links.node_id
-								where node_links.directory_id=:id
+									nodes.node_id=node_links.node_id
+								inner join node_access on 
+									node_access.node_id=node_links.node_id
+								where 
+								node_links.directory_id=:id and
+								node_access.user_id=:user_id
 							");
 			$statement->bindParam(':id',$node_id);
+			$statement->bindParam(':user_id',$user_id);
 			if($statement->execute()==false)
 			{
 				error_log("there is an error in the sql statement in get_links_of");
@@ -439,14 +447,16 @@ require_once "node.php";
 
 		}
 
-		function create_home_directory():int
+		function create_home_directory()
 		{
-			$ret=$this->create_dangling_directory();
+			$home_id=$this->create_dangling_directory();
 			$trash_folder_id=$this->create_dangling_directory();
-			$this->link_nodes($ret,$trash_folder_id,"trash","trash folder");
+			$this->link_nodes($home_id,$trash_folder_id,"trash","trash folder");
 
 			$share_folder_id=$this->create_dangling_directory();
-			$this->link_nodes($ret,$share_folder_id,"share","shared things go in here");
+			$this->link_nodes($home_id,$share_folder_id,"share","shared things go in here");
+
+			$ret=array("home" => $home_id, "trash" => $trash_folder_id , "share" =>$share_folder_id);
 			return $ret;
 		}
 
@@ -647,12 +657,12 @@ require_once "node.php";
 				}else
 				{
 					$hashed_pass=password_hash($password,$password_hash_algo);
-					$home_dir=$this->create_home_directory();
+					$dirs=$this->create_home_directory();
 					$prep=$this->pdo->prepare("insert into users(username,password,email,home_directory) values(:username,:password,:email,:dir)");
 					$prep->bindParam(':username',$user);
 					$prep->bindParam(':password',$hashed_pass);
 					$prep->bindParam(':email',$email);
-					$prep->bindParam(':dir',$home_dir);
+					$prep->bindParam(':dir',$dirs["home"]);
 					if($prep->execute()==false)
 					{
 						error_log("can't create user because there was an error in the sql statement");
@@ -660,8 +670,14 @@ require_once "node.php";
 						exit(1);
 					}
 					$user_id=$this->get_user($user)->user_id;
-					$this->give_view_access($home_dir,$user_id);
-					$this->give_edit_access($home_dir,$user_id);
+					$this->give_view_access($dirs["home"],$user_id);
+					$this->give_edit_access($dirs["home"],$user_id);
+
+					$this->give_view_access($dirs["trash"],$user_id);
+					$this->give_edit_access($dirs["trash"],$user_id);
+
+					$this->give_view_access($dirs["share"],$user_id);
+					$this->give_edit_access($dirs["share"],$user_id);
 				}
 				return true;
 			}

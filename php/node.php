@@ -48,7 +48,7 @@ require_once "user.php";
 		$dir_id=get_directory($abstract_path,$user);
 		if($dir_id==NULL)
 			return NULL;
-		return $database->get_links_of($dir_id);
+		return $database->get_links_of($dir_id,$user->user_id);
 	}
 
 	/*path is in terms of the simulated filesystem*/
