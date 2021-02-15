@@ -24,7 +24,7 @@ if (!$dir) {
     exit(0);
 }
 
-$contents_of_dir = $database->get_links_of($dir);
+$contents_of_dir = $database->get_links_of($dir,$user->user_id);
 $file_node = null;
 
 foreach ($contents_of_dir as $c) {
