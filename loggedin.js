@@ -337,7 +337,6 @@ function openfile_nondir() {
             let b = `data:image/png;base64,${base64ArrayBuffer(xhr.response)}`;
             focus.filecontents.style.backgroundImage = `url('${b}')`;
             focus.filecontents.classList.add('imgview');
-            focus.filecontents.innerText = "asdf";
         }
     }
     else {
