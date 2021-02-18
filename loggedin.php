@@ -8,5 +8,5 @@
     <input type="hidden" name="parent_directory" id="upload_parent_directory">
 </form>
 
-
+<script src="actions.js"></script>
 <script src="loggedin.js"></script>

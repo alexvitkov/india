@@ -949,6 +949,8 @@ function add_file_visuals(fileview) {
                     open_file = fileview;
                     openfile(fileview.is_directory);
                 }], 
+
+
             ];
 
             if (is_in_trash) {
@@ -961,6 +963,18 @@ function add_file_visuals(fileview) {
                     ['Rename', () => { rename_file(fileview.filename); }],
                 );
                 if (!fileview.is_directory) {
+                    for (let a of actions) {
+                        if (fileview.filename.endsWith(a.extension)) {
+                            context_list.push(
+                                [a.text, () => { 
+                                    read_file_contents(false, (x) => {
+                                        alert (encodeURIComponent(x));
+                                    }, get_path(), fileview.filename);
+                                }]
+                            );
+                        }
+                    }
+
                     if (fileview.write_permissions) {
                         context_list.push(
                             ['Replace',  () => { replace_file(false, fileview.filename); }],
