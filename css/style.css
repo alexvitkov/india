@@ -493,3 +493,10 @@ pre {
     background: white;
 }
 
+
+.wndtitle {
+    display: flex;
+    align-items: center;
+    flex: 1 1 0;
+    padding-left: 0.8rem;
+}

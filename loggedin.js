@@ -669,16 +669,12 @@ function mkcheckbox(parent, label, togglefn) {
 function make_share_window(folder, filename) {
     var wnd = make_window_base(null, 400, 400, 400, 0);
 
-    wnd.h2.style.padding = "0.0rem 0rem 0.0rem 0.8rem";
     wnd.h2.style.display = 'flex';
 
     // The title of the window. WE set its 'flex' to 1 1 0 so it fills up the titlebar
     // and pushes the X button to the very right
-    var heading = mk(wnd.h2, 'span');
+    var heading = mk(wnd.h2, 'span', 'wndtitle');
     heading.innerText = "Share " + filename;
-    heading.style.display = 'flex';
-    heading.style.alignItems = 'center';
-    heading.style.flex = "1 1 0";
 
     // Close button
     var x_button = mk(wnd.h2, 'button', 'close_button');
@@ -970,7 +966,27 @@ function add_file_visuals(fileview) {
                                         const ue = encodeURIComponent(x);
                                         let url = a.url.replace("$content_urlencoded", ue)
                                                        .replace("$filename", fileview.filename);
-                                        window.location = url;
+
+                                        if (a.open_in_iframe) {
+                                            const wnd = make_window_base([], 10, 10, 800, 600);
+
+                                            var title = mk(wnd.h2, 'span', 'wndtitle');
+                                            title.innerText = fileview.filename;
+
+                                            // Close button
+                                            var x_button = mk(wnd.h2, 'button', 'close_button');
+                                            x_button.innerText = "X";
+                                            x_button.onclick = delete_window;
+
+                                            const contents = mk(wnd.visuals, 'div', 'filecontentsroot');
+                                            const iframe = mk(contents, 'iframe');
+                                            iframe.style.flex = '1 0 0';
+                                            iframe.src = url;
+
+                                            focus_window(wnd);
+                                        } else {
+                                            window.location = url;
+                                        }
                                     }, get_path(), fileview.filename);
                                 }]
                             );
