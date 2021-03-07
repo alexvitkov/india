@@ -1,18 +1,14 @@
 const actions = [
     {
         "extension": ".txt",
-        "text": "Google search filename",
-        "url": "https://www.google.com/search?q=$filename"
+        "text": "Bing filename",
+        "url": "https://www.bing.com/search?q=$filename",
+        "open_in_iframe": "true"
     },
     {
         "extension": ".txt",
-        "text": "Google search contents",
-        "url": "https://www.google.com/search?q=$content_urlencoded"
-    },
-    {
-        "extension": ".txt",
-        "text": "ZAMUNDDA TO4KA NET",
-        "url": "https://zamunda.net",
-        "open_in_iframe": "true",
-    },
+        "text": "Bing contents",
+        "url": "https://www.bing.com/search?q=$content_urlencoded",
+        "open_in_iframe": "true"
+    }
 ];
