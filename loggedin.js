@@ -292,7 +292,7 @@ function read_file_contents(text, cb, folder, filename) {
 
     if (text) {
         xhr.onload = function () {
-            cb(e.responseText);
+            cb(xhr.responseText);
         };
     } else {
         xhr.responseType = 'arraybuffer';
@@ -966,8 +966,11 @@ function add_file_visuals(fileview) {
                         if (fileview.filename.endsWith(a.extension)) {
                             context_list.push(
                                 [a.text, () => { 
-                                    read_file_contents(false, (x) => {
-                                        alert (encodeURIComponent(x));
+                                    read_file_contents(true, (x) => {
+                                        const ue = encodeURIComponent(x);
+                                        let url = a.url.replace("$content_urlencoded", ue)
+                                                       .replace("$filename", fileview.filename);
+                                        window.location = url;
                                     }, get_path(), fileview.filename);
                                 }]
                             );

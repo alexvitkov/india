@@ -13,6 +13,6 @@ const actions = [
     {
         "extension": ".txt",
         "text": "Google search contents",
-        "url": "https://www.google.com/search?q=$filename"
+        "url": "https://www.google.com/search?q=$content_urlencoded"
     }
 ];
