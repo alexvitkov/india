@@ -551,6 +551,7 @@ function begin_drag_fileview(e, fileview) {
 // Start dragging the 'obj' DOM element
 // e is a DOM event, this should only get called in response of a DOM event
 function begin_drag(e, obj, dont_set_width) {
+    set_iframe_enabled(false);
     dragging = obj;
     dragging_candidate = null;
     dragging.classList.add("dragged");
@@ -575,6 +576,8 @@ function begin_drag(e, obj, dont_set_width) {
 }
 
 function end_drag(_e) {
+    set_iframe_enabled(true);
+
     // If there's a dragging palceholder remove it and put the dragged node back into its place
     if (dragging_placeholder) {
         dragging_placeholder.parentNode.insertBefore(dragging, dragging_placeholder);
@@ -1131,5 +1134,10 @@ document.body.oncontextmenu = (e) => {
 }
 
 the_file.onchange = (e) => { on_file_added(e); };
+
+function set_iframe_enabled(en) {
+    for (const iframe of document.getElementsByTagName('iframe'))
+        iframe.hidden = !en;
+}
 
 main();
