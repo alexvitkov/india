@@ -160,6 +160,7 @@ form > h2 {
 	background: #f0f0f0;
 	border-top-left-radius: 0.5rem;
 	border-top-right-radius: 0.5rem;
+    align-content: center;
 }
 
 
@@ -499,4 +500,9 @@ pre {
     align-items: center;
     flex: 1 1 0;
     padding-left: 0.8rem;
+}
+
+iframe {
+    margin: 0;
+    border: 0;
 }
