@@ -5,12 +5,17 @@ var FORM_ASYNC = true;
 
 // A FileView is an entry inside the explorer window
 class FileView {
-    constructor(filename,  mimetype, is_directory, write_permissions) {
+    constructor(filename, wnd, mimetype, is_directory, write_permissions) {
         this.filename     = filename;
+        this.wnd          = wnd;
         this.visuals      = null; // The DOM object with the icon and the filenam text
         this.mimetype     = mimetype;
         this.is_directory = is_directory;
         this.write_permissions = write_permissions;
+    }
+
+    full_path() {
+        return path_combine(get_path(this.wnd), this.filename);
     }
 }
 
@@ -275,7 +280,7 @@ function update_path_visuals(wnd) {
         entry.onmouseup = (e) => {
             if (dragging && dragging_fileview) {
                 var new_folder = get_path(wnd, i + 1);
-                move_file(new_folder, dragging_fileview.filename, wnd);
+                move_file(dragging_fileview.wnd, wnd, new_folder, dragging_fileview.filename);
                 end_drag();
     
                 e.preventDefault();
@@ -411,6 +416,7 @@ function openfile_dir(wnd) {
         // Create the FileViews from the json response
         for (const f of json) {
             var view = new FileView(f.name, 
+                                    wnd,
                                     f.mimetype, 
                                     f.is_directory && f.is_directory != "0", 
                                     f.can_edit     && f.can_edit     != "0");
@@ -446,12 +452,18 @@ function openfile_dir(wnd) {
 
     wnd.filecontentsroot.style.display = 'none';
     wnd.foldercontents.style.display   = 'flex';
+
+    wnd.foldercontents.onmouseup = () => {
+        if (dragging && dragging_fileview) {
+            move_file(dragging_fileview.wnd, wnd, get_path(wnd), dragging_fileview.filename);
+        }
+    }
 }
 
 
 function openfile(is_directory, wnd) {
     if (!wnd) { 
-        alert(451);
+        alert("YOU ARE NOT SUPPOSED TO SEE THIS. PLEASE COPY THE STACKTRACE FROM THE CONSOLE AND SEND IT TO THE NEAREST DEVELOPER");
         console.trace();
         wnd = focus;
     }
@@ -464,7 +476,7 @@ function openfile(is_directory, wnd) {
 }
 
 function move_to_trash(wnd, filename) {
-    move_file("/trash", filename, path_combine(get_path(wnd), filename), wnd);
+    move_file(wnd, wnd, "/trash", filename, path_combine(get_path(wnd), filename));
 }
 
 function restore_from_trash(wnd, filename) {
@@ -472,7 +484,7 @@ function restore_from_trash(wnd, filename) {
     var new_filename = split.pop();
     var new_directory = "/" + split.join("/");
 
-    move_file(new_directory, filename, new_filename, wnd);
+    move_file(wnd, new_directory, filename, new_filename);
 }
 
 
@@ -509,12 +521,12 @@ function rename_file(filename, wnd) {
     xhr.send(data);
 }
 
-function move_file(new_folder, filename, new_filename, wnd) {
+function move_file(srcwnd, dstwnd, new_folder, filename, new_filename) {
     if (!new_filename)
         new_filename = filename;
 
     var data = new FormData();
-    data.append('old_folder',  get_path(wnd));
+    data.append('old_folder',  get_path(srcwnd));
     data.append('new_folder',  new_folder);
     data.append('filename',    filename);
     data.append('new_filename',new_filename);
@@ -522,7 +534,8 @@ function move_file(new_folder, filename, new_filename, wnd) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/move.php', true);
     xhr.onload = () => {
-        openfile(true, wnd);
+        openfile(true, srcwnd);
+        openfile(true, dstwnd);
     };
     xhr.send(data);
 }
@@ -960,9 +973,9 @@ function add_file_visuals(fileview, wnd) {
                     var new_pwd = wnd.pwd.slice();
                     new_pwd.push(fileview.filename);
                     var new_wnd = make_window(new_pwd, true);
-                    focus_window(new_wnd);
                     open_file = fileview;
-                    openfile(fileview.is_directory, wnd);
+                    openfile(fileview.is_directory, new_wnd);
+                    focus_window(new_wnd);
                 }], 
             ];
 
@@ -1052,7 +1065,7 @@ function add_file_visuals(fileview, wnd) {
                     // move to 'share' is invalid
                 } else {
                     // If we've dragged something onto a directory, move it into that directory
-                    move_file(path_combine(get_path(wnd), fileview.filename), dragging_fileview.filename, wnd);
+                    move_file(dragging_fileview.wnd, wnd, path_combine(get_path(wnd), fileview.filename), dragging_fileview.filename);
                 } 
             } else {
                 // alert(`Dropped ${dst.filename} on ${src.filename}`);
