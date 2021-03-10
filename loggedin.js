@@ -591,7 +591,7 @@ function begin_drag(e, obj, dont_set_width) {
 function end_drag(_e) {
     set_iframe_enabled(true);
 
-    // If there's a dragging palceholder remove it and put the dragged node back into its place
+    // If there's a dragging placeholder remove it and put the dragged node back into its place
     if (dragging_placeholder) {
         dragging_placeholder.parentNode.insertBefore(dragging, dragging_placeholder);
         dragging_placeholder.remove();
