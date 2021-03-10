@@ -83,7 +83,7 @@ function main() {
 
     // Focus that window and load the directory
     focus_window(root_window);
-    openfile(true);    
+    openfile(true, root_window);    
 }
 
 function focus_window(wnd) {
@@ -99,13 +99,15 @@ function focus_window(wnd) {
 }
 
 // Delete the focused window
-function delete_window() {
-    var index = windows.indexOf(focus);
+function delete_window(wnd) {
+    var index = windows.indexOf(wnd);
+
     if (index >= 0)
         windows.splice(index, 1);
     
-    focus.visuals.parentNode.removeChild(focus.visuals);
-    fous = null;
+    wnd.visuals.parentNode.removeChild(wnd.visuals);
+    if (wnd == focus)
+        focus = null;
 }
 
 // Create a right click context menu
@@ -148,7 +150,7 @@ function on_file_added(_e) {
         } else {
             filename_input.value          = the_file.files[0].name;
             override_input.value          = "0";
-            upload_parent_directory.value = get_path();
+            upload_parent_directory.value = get_path(focus);
         }
 
         if (!FORM_ASYNC) {
@@ -163,7 +165,7 @@ function on_file_added(_e) {
         }).then((resp) => {
             if (resp.status == 200) {
                 // Reload the directory so the user can see the newly uploaded file
-                openfile(true);
+                openfile(true, focus);
             } else {
                 alert("Upload failed");
             }
@@ -235,18 +237,23 @@ function base64ArrayBuffer(arrayBuffer) {
 
 
 // This updates the path of the window's DOM (the "Root > Folder1 > Folder2 > foo.png")
-function update_path_visuals() {
-    var the_path = focus.visuals.getElementsByClassName('path')[0];
+function update_path_visuals(wnd) {
+    if (!wnd) {
+        alert("YOU ARE NOT SUPPOSED TO SEE THIS. PLEASE COPY THE STACKTRACE FROM THE CONSOLE AND SEND IT TO THE NEAREST DEVELOPER");
+        wnd = focus;
+    }
+
+    var the_path = wnd.visuals.getElementsByClassName('path')[0];
 
     // Remove the old path
     while (the_path.children.length > 0)
         the_path.removeChild(the_path.lastChild);
 
-    for (let i = -1; i < focus.pwd.length; i++) {
+    for (let i = -1; i < wnd.pwd.length; i++) {
         var d;
         // For each element after the first create a separator
         if (i >= 0) {
-            d = focus.pwd[i];
+            d = wnd.pwd[i];
             var separator_div = mk(the_path, 'div', 'separator');
             separator_div.innerText = "»";
         }
@@ -258,17 +265,17 @@ function update_path_visuals() {
 
         // When we click the entry, go to its folder
         entry.onclick = (_e) => {
-            if (length < focus.pwd.length) {
-                focus.pwd.length = i + 1;
-                openfile(true);
+            if (length < wnd.pwd.length) {
+                wnd.pwd.length = i + 1;
+                openfile(true, wnd);
             }
         }
     
         // We can drop files onto the path, which will omve them to teh folder
         entry.onmouseup = (e) => {
             if (dragging && dragging_fileview) {
-                var new_folder = get_path(i + 1);
-                move_file(new_folder, dragging_fileview.filename);
+                var new_folder = get_path(wnd, i + 1);
+                move_file(new_folder, dragging_fileview.filename, wnd);
                 end_drag();
     
                 e.preventDefault();
@@ -308,47 +315,47 @@ function read_file_contents(text, cb, folder, filename) {
 // This opens a file.
 // If the file has image/* mimetype, it will be displayed as an image
 // otherwise it will be displayed as plaintext
-function openfile_nondir() {
+function openfile_nondir(wnd) {
 
-    while (focus.filecontents.children.length > 0)
-        focus.filecontents.removeChild(focus.filecontents.lastChild);
+    while (wnd.filecontents.children.length > 0)
+        wnd.filecontents.removeChild(wnd.filecontents.lastChild);
 
     // Send a request to readfile.php, which will give us the contents
     var data = new FormData();
-    data.append('folder', get_path(focus.pwd.length - 1));
-    data.append('filename', focus.pwd[focus.pwd.length - 1]);
+    data.append('folder', get_path(wnd, wnd.pwd.length - 1));
+    data.append('filename', wnd.pwd[wnd.pwd.length - 1]);
 
     var xhr = new XMLHttpRequest();
 
-    update_path_visuals();
+    update_path_visuals(wnd);
 
     xhr.open('POST', '/php/readfile.php', true);
 
-    focus.filecontents.innerText = "";
-    focus.filecontentsroot.style.display = 'flex';
-    focus.foldercontents.style.display   = 'none';
+    wnd.filecontents.innerText = "";
+    wnd.filecontentsroot.style.display = 'flex';
+    wnd.foldercontents.style.display   = 'none';
 
     let is_image = open_file.mimetype.split("/")[0] == "image";
-    focus.save_btn_container.style.display = (open_file.write_permissions && !is_image) ? "flex" : "none";
+    wnd.save_btn_container.style.display = (open_file.write_permissions && !is_image) ? "flex" : "none";
 
     if (is_image) {
         xhr.responseType = 'arraybuffer';
         xhr.onload = function () {
             let b = `data:image/png;base64,${base64ArrayBuffer(xhr.response)}`;
-            focus.filecontents.style.backgroundImage = `url('${b}')`;
-            focus.filecontents.classList.add('imgview');
+            wnd.filecontents.style.backgroundImage = `url('${b}')`;
+            wnd.filecontents.classList.add('imgview');
         }
     }
     else {
-        focus.filecontents.classList.remove('imgview');
-        focus.filecontents.style.backgroundImage = "unset";
+        wnd.filecontents.classList.remove('imgview');
+        wnd.filecontents.style.backgroundImage = "unset";
 
-        focus.txt_editor = mk(focus.filecontents, 'pre');
+        wnd.txt_editor = mk(wnd.filecontents, 'pre');
 
         xhr.onload = function () {
-            focus.txt_editor.innerText = xhr.responseText;
+            wnd.txt_editor.innerText = xhr.responseText;
             if (open_file.write_permissions)
-                focus.txt_editor.contentEditable = "true";
+                wnd.txt_editor.contentEditable = "true";
         };
     }
 
@@ -356,12 +363,12 @@ function openfile_nondir() {
 }
 
 // This is a tiny wrapper around the share_window.
-function share(in_file, filename) {
+function share(in_file, filename, wnd) {
     if (in_file) {
-        var folder = get_path(focus.pwd.length - 1);
-        filename = focus.pwd[focus.pwd.length - 1];
+        var folder = get_path(wnd, wnd.pwd.length - 1);
+        filename = wnd.pwd[wnd.pwd.length - 1];
     } else {
-        var folder = get_path();
+        var folder = get_path(wnd);
     }
 
     var wnd = make_share_window(folder, filename);
@@ -369,12 +376,12 @@ function share(in_file, filename) {
 }
 
 // Replace an existing file with a new one
-function replace_file(in_file, filename) {
+function replace_file(in_file, filename, wnd) {
     if (in_file) {
-        var folder = get_path(focus.pwd.length - 1);
-        filename = focus.pwd[focus.pwd.length - 1];
+        var folder = get_path(wnd, wnd.pwd.length - 1);
+        filename = wnd.pwd[wnd.pwd.length - 1];
     } else {
-        var folder = get_path();
+        var folder = get_path(wnd);
     }
 
     override_file = true;
@@ -384,18 +391,18 @@ function replace_file(in_file, filename) {
 }
 
 // This loads the contents of the current directory
-function opendir() {
-    update_path_visuals();
+function openfile_dir(wnd) { 
+    update_path_visuals(wnd);
 
     var data = new FormData();
-    data.append('path', get_path());
+    data.append('path', get_path(wnd));
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/readdir.php', true);
     xhr.onload = function () {
-        for (const f of focus.files)
+        for (const f of wnd.files)
             f.visuals.remove();
-        focus.files = [];
+        wnd.files = [];
 
         var json = JSON.parse(xhr.responseText);
         if (!json)
@@ -407,21 +414,21 @@ function opendir() {
                                     f.mimetype, 
                                     f.is_directory && f.is_directory != "0", 
                                     f.can_edit     && f.can_edit     != "0");
-            focus.files.push(view);
+            wnd.files.push(view);
         }
 
         // Sort the files nicely before adding their visuals
         // Folders come first, then files, then the special trash directory
         // Everything inside the categories is lexically sorted
-        focus.files.sort((a, b) => {
-            if (focus.pwd.length == 0 && a.filename == "share")
+        wnd.files.sort((a, b) => {
+            if (wnd.pwd.length == 0 && a.filename == "share")
                 return -10;
-            if (focus.pwd.length == 0 && b.filename == "share")
+            if (wnd.pwd.length == 0 && b.filename == "share")
                 return 10;
 
-            if (focus.pwd.length == 0 && a.filename == "trash")
+            if (wnd.pwd.length == 0 && a.filename == "trash")
                 return 10;
-            if (focus.pwd.length == 0 && b.filename == "trash")
+            if (wnd.pwd.length == 0 && b.filename == "trash")
                 return -10;
             if (a.is_directory && !b.is_directory)
                 return -1;
@@ -430,103 +437,109 @@ function opendir() {
             return a.filename.localeCompare(b.filename);
         });
 
-        for (const f of focus.files) {
-            add_file_visuals(f);
+        for (const f of wnd.files) {
+            add_file_visuals(f, wnd);
         }
 
     };
     xhr.send(data);
 
-    focus.filecontentsroot.style.display = 'none';
-    focus.foldercontents.style.display   = 'flex';
+    wnd.filecontentsroot.style.display = 'none';
+    wnd.foldercontents.style.display   = 'flex';
 }
 
 
-function openfile(is_directory) {
+function openfile(is_directory, wnd) {
+    if (!wnd) { 
+        alert(451);
+        console.trace();
+        wnd = focus;
+    }
+
     if (is_directory) {
-        opendir();
+        openfile_dir(wnd);
     } else {
-        openfile_nondir();
+        openfile_nondir(wnd);
     }
 }
 
-function move_to_trash(filename) {
-    move_file("/trash", filename, path_combine(get_path(), filename));
+function move_to_trash(wnd, filename) {
+    move_file("/trash", filename, path_combine(get_path(wnd), filename), wnd);
 }
 
-function restore_from_trash(filename) {
+function restore_from_trash(wnd, filename) {
     var split = filename.split("/");
     var new_filename = split.pop();
     var new_directory = "/" + split.join("/");
 
-    move_file(new_directory, filename, new_filename);
+    move_file(new_directory, filename, new_filename, wnd);
 }
 
 
 // This deletes the file, *for real*
 // move_to_trash is what is actually called when the user clicks 'Delete'
-function delete_file(filename) {
+function delete_file(wnd, filename) {
     var data = new FormData();
-    data.append('folder', get_path());
+    data.append('folder', get_path(wnd));
     data.append('filename', filename);
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/delete.php', true);
     xhr.onload = function () {
-        openfile(true);
+        openfile(true, wnd);
     };
     xhr.send(data);
 }
 
-function rename_file(filename) {
+function rename_file(filename, wnd) {
     var new_name = prompt(`Rename ${filename} to`, filename);
     if (!new_name)
         return;
 
     var data = new FormData();
-    data.append('folder', get_path());
+    data.append('folder', get_path(wnd));
     data.append('old_filename', filename);
     data.append('new_filename', new_name);
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/rename.php', true);
     xhr.onload = function () {
-        openfile(true);
+        openfile(true, wnd);
     };
     xhr.send(data);
 }
 
-function move_file(new_folder, filename, new_filename) {
+function move_file(new_folder, filename, new_filename, wnd) {
     if (!new_filename)
         new_filename = filename;
 
     var data = new FormData();
-    data.append('old_folder',  get_path());
+    data.append('old_folder',  get_path(wnd));
     data.append('new_folder',  new_folder);
     data.append('filename',    filename);
     data.append('new_filename',new_filename);
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/move.php', true);
-    xhr.onload = function () {
-        openfile(true);
+    xhr.onload = () => {
+        openfile(true, wnd);
     };
     xhr.send(data);
 }
 
-function new_folder() { 
+function new_folder(wnd) { 
     var dirname = prompt(`Directory name`, "New Folder");
     if (!dirname)
         return;
 
     var data = new FormData();
-    data.append('parent_directory', get_path());
+    data.append('parent_directory', get_path(wnd));
     data.append('dirname', dirname);
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/mkdir.php', true);
     xhr.onload = function () {
-        openfile(true);
+        openfile(true, wnd);
     };
     xhr.send(data);
 }
@@ -682,7 +695,7 @@ function make_share_window(folder, filename) {
     // Close button
     var x_button = mk(wnd.h2, 'button', 'close_button');
     x_button.innerText = "X";
-    x_button.onclick = delete_window;
+    x_button.onclick = () => delete_window(wnd);
 
     wnd.foldercontents = mk(wnd.visuals, 'div', 'share_dialog_contents');
     wnd.foldercontents.style.padding = "0.5rem";
@@ -777,18 +790,22 @@ function make_share_window(folder, filename) {
         }
 
         xhr.send(form_data);
-        delete_window();
+        delete_window(wnd);
     }
 
     return wnd;
 }
 
-function download_file(in_file, filename) {
+function download_file(in_file, filename, wnd) {
+    if (!wnd) {
+        alert (802);
+        wnd = focus;
+    }
     if (in_file) {
-        var folder = get_path(focus.pwd.length - 1);
-        filename = focus.pwd[focus.pwd.length - 1];
+        var folder = get_path(wnd, wnd.pwd.length - 1);
+        filename = wnd.pwd[wnd.pwd.length - 1];
     } else {
-        var folder = get_path();
+        var folder = get_path(wnd);
     }
 
     // Read the file contents and then do DISGUSTING javascript things to download the ifle
@@ -822,7 +839,7 @@ function make_window(pwd, has_close) {
     if (has_close) {
         var x_button = mk(wnd.h2, 'button', 'close_button');
         x_button.innerText = "X";
-        x_button.onclick = delete_window;
+        x_button.onclick = () => delete_window(wnd);
     }
 
     // wnd.foldercontents is where the FileViews will be stored
@@ -843,7 +860,7 @@ function make_window(pwd, has_close) {
 
         var new_folder_btn = mk(h3, 'button');
         new_folder_btn.innerText = "New Folder";
-        new_folder_btn.onclick = () => { new_folder(); }
+        new_folder_btn.onclick = () => { new_folder(wnd); }
 
         mk(h3, 'div', 'separator');
 
@@ -863,7 +880,7 @@ function make_window(pwd, has_close) {
 
         let share_btn = mk(h3, 'button');
         share_btn.innerText = "Share";
-        share_btn.onclick = () => { share(true); }
+        share_btn.onclick = () => { share(true, wnd); }
         mk(h3, 'div', 'separator');
 
         wnd.save_btn_container = mk(h3, 'div');
@@ -871,7 +888,7 @@ function make_window(pwd, has_close) {
 
         let save_btn = mk(wnd.save_btn_container, 'button');
         save_btn.innerText = "Save";
-        save_btn.onclick = save_open_text_file;
+        save_btn.onclick = () => save_open_text_file(wnd);
         mk(wnd.save_btn_container, 'div', 'separator');
 
         wnd.filecontents = mk(wnd.filecontentsroot, 'div', 'filecontents');
@@ -881,14 +898,14 @@ function make_window(pwd, has_close) {
 }
 
 
-function save_open_text_file() {
-    const contents = focus.txt_editor.innerText;
+function save_open_text_file(wnd) {
+    const contents = wnd.txt_editor.innerText;
     let xhr = new XMLHttpRequest();
     xhr.open('POST', '/php/upload.php', true);
 
     var data = new FormData();
-    data.append('parent_directory', get_path (focus.pwd.length - 1));
-    data.append('filename',         focus.pwd[focus.pwd.length - 1]);
+    data.append('parent_directory', get_path (wnd.pwd.length - 1));
+    data.append('filename',         wnd.pwd[wnd.pwd.length - 1]);
     data.append('content',          contents);
     data.append('overwrite',        '1');
 
@@ -897,24 +914,24 @@ function save_open_text_file() {
 
 
 // Create the visuals for a FileView
-function add_file_visuals(fileview) {
+function add_file_visuals(fileview, wnd) {
     // Are we in a subdirectory of the trash folder?
-    var is_in_trash = focus.pwd.length > 0 && focus.pwd[0] == "trash";
+    var is_in_trash = wnd.pwd.length > 0 && wnd.pwd[0] == "trash";
 
     // Is the current filewview the trash folder itself?
-    var is_trash    = focus.pwd.length == 0 && fileview.filename == "trash";
-    var is_share    = focus.pwd.length == 0 && fileview.filename == "share";
+    var is_trash    = wnd.pwd.length == 0 && fileview.filename == "trash";
+    var is_share    = wnd.pwd.length == 0 && fileview.filename == "share";
 
-    var visuals = mk(focus.filegrid, 'div');
+    var visuals = mk(wnd.filegrid, 'div');
     fileview.visuals = visuals;
 
     var img = document.createElement('img');
     var filename = document.createElement('div');
 
     if (fileview.is_directory) {
-        if (get_path() == "/" && fileview.filename == "trash")
+        if (get_path(wnd) == "/" && fileview.filename == "trash")
             img.src="/mimeicons/user-trash.png";
-        else if (get_path() == "/" && fileview.filename == "share")
+        else if (get_path(wnd) == "/" && fileview.filename == "share")
             img.src = "/mimeicons/user-share.png";
         else
             img.src="/mimeicons/directory.png";
@@ -923,11 +940,11 @@ function add_file_visuals(fileview) {
     }
 
     fileview.visuals.onclick = () => {
-        focus.pwd.push(fileview.filename);
+        wnd.pwd.push(fileview.filename);
         if (!fileview.is_directory) {
             open_file = fileview;
         }
-        openfile(fileview.is_directory);
+        openfile(fileview.is_directory, wnd);
     }
 
     visuals.oncontextmenu = (e) => {
@@ -936,29 +953,27 @@ function add_file_visuals(fileview) {
             var context_list = [
                 // Open is always in the context list
                 ['Open', () => {
-                    focus.pwd.push(fileview.filename);
-                    openfile(fileview.is_directory);
+                    wnd.pwd.push(fileview.filename);
+                    openfile(fileview.is_directory, wnd);
                 }], 
                 ['Open in New Window', () => {
-                    var new_pwd = focus.pwd.slice();
+                    var new_pwd = wnd.pwd.slice();
                     new_pwd.push(fileview.filename);
                     var new_wnd = make_window(new_pwd, true);
                     focus_window(new_wnd);
                     open_file = fileview;
-                    openfile(fileview.is_directory);
+                    openfile(fileview.is_directory, wnd);
                 }], 
-
-
             ];
 
             if (is_in_trash) {
                 // If we're in the trash, we can restore files or delete them forever
-                context_list.push(['Restore', () => {  restore_from_trash(fileview.filename); }]);
-                context_list.push(['Delete forever', () => { delete_file(fileview.filename); }]);
+                context_list.push(['Restore', () => {  restore_from_trash(wnd, fileview.filename); }]);
+                context_list.push(['Delete forever', () => { delete_file(wnd, fileview.filename); }]);
             } else if (!is_trash && !is_share) {
                 // If we;'re not in trash we can rename/share/download/move files to trash
                 context_list.push(
-                    ['Rename', () => { rename_file(fileview.filename); }],
+                    ['Rename', () => { rename_file(fileview.filename, wnd); }],
                 );
                 if (!fileview.is_directory) {
                     for (let a of actions) {
@@ -979,7 +994,7 @@ function add_file_visuals(fileview) {
                                             // Close button
                                             var x_button = mk(wnd.h2, 'button', 'close_button');
                                             x_button.innerText = "X";
-                                            x_button.onclick = delete_window;
+                                            x_button.onclick = () => delete_window(wnd);
 
                                             const contents = mk(wnd.visuals, 'div', 'filecontentsroot');
                                             const iframe = mk(contents, 'iframe');
@@ -990,7 +1005,7 @@ function add_file_visuals(fileview) {
                                         } else {
                                             window.location = url;
                                         }
-                                    }, get_path(), fileview.filename);
+                                    }, get_path(wnd), fileview.filename);
                                 }]
                             );
                         }
@@ -998,16 +1013,16 @@ function add_file_visuals(fileview) {
 
                     if (fileview.write_permissions) {
                         context_list.push(
-                            ['Replace',  () => { replace_file(false, fileview.filename); }],
+                            ['Replace',  () => { replace_file(false, fileview.filename, wnd); }],
                         );
                     }
                     context_list.push(
-                        ['Share',    () => { share(false, fileview.filename); }],
+                        ['Share',    () => { share(false, fileview.filename, wnd); }],
                         ['Download', () => { download_file(false, fileview.filename); }],
                     );
                 }
                 context_list.push(
-                    ['Delete', () => { move_to_trash(fileview.filename); }]
+                    ['Delete', () => {  move_to_trash(wnd, fileview.filename); }]
                 );
             }
 
@@ -1029,15 +1044,15 @@ function add_file_visuals(fileview) {
     visuals.onmouseup = (e) => {
         if (dragging) {
             if (fileview.is_directory) {
-                if (get_path() == "/" && fileview.filename == "trash") {
+                if (get_path(wnd) == "/" && fileview.filename == "trash") {
                     // If we've dragged something onto the trashcan, it's trash
-                    move_to_trash(dragging_fileview.filename);
+                    move_to_trash(wnd, dragging_fileview.filename);
                 } 
-                else if (get_path() == "/" && fileview.filename == "share") {
+                else if (get_path(wnd) == "/" && fileview.filename == "share") {
                     // move to 'share' is invalid
                 } else {
                     // If we've dragged something onto a directory, move it into that directory
-                    move_file(path_combine(get_path(), fileview.filename), dragging_fileview.filename);
+                    move_file(path_combine(get_path(wnd), fileview.filename), dragging_fileview.filename, wnd);
                 } 
             } else {
                 // alert(`Dropped ${dst.filename} on ${src.filename}`);
@@ -1065,20 +1080,24 @@ function add_file_visuals(fileview) {
 
     visuals.appendChild(img);
     visuals.appendChild(filename);
-
 }
 
 
 // Reads the 'pwd' of the focused window
 // If pwd is ['foo', 'bar', 'baz'], this returns '/foo/bar/baz' 
-function get_path(max_length) {
+function get_path(wnd, max_length) {
+    if (!wnd) {
+        alert("YOU ARE NOT SUPPOSED TO SEE THIS. PLEASE COPY THE STACKTRACE FROM THE CONSOLE AND SEND IT TO THE NEAREST DEVELOPER");
+        console.trace();
+        wnd = focus;
+    }
     if (max_length == undefined) {
-        max_length = focus.pwd.length;
+        max_length = wnd.pwd.length;
     }
 
     var path = "/";
     for (let i = 0; i < max_length; i++) {
-        path += focus.pwd[i];
+        path += wnd.pwd[i];
         if (i != max_length - 1)
             path += "/";
     }
