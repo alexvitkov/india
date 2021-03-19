@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
         "rootDir": "front",
-        "outFile": "build/bundle.js"
+        "outDir": "temp"
     }
 }

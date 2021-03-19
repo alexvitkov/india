@@ -2,3 +2,5 @@ screen
 files
 node_modules
 php/custom_configuration.php
+build
+temp
