@@ -1,0 +1,23 @@
+{
+  "name": "htdocs",
+  "version": "1.0.0",
+  "description": "FILEUP",
+  "main": "actions.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexvitkov/india.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alexvitkov/india/issues"
+  },
+  "homepage": "https://github.com/alexvitkov/india#readme",
+  "devDependencies": {
+    "typescript": "^4.2.3"
+  }
+}

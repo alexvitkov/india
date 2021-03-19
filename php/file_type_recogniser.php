@@ -71,7 +71,7 @@ function file_extension($path_to_file) {
 
 function get_icon($path_to_file)
 {
-	$file_ext="svg/icons/".file_extension($path_to_file).".svg";
+	$file_ext="img/icons/".file_extension($path_to_file).".svg";
 	if(!file_exists($file_ext))
 	{
 		return "svg/icons/.dat.svg";

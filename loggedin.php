@@ -9,4 +9,4 @@
 </form>
 
 <script src="actions.js"></script>
-<script src="loggedin.js"></script>
+<script src="build/bundle.js"></script>

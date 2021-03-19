@@ -1,0 +1,6 @@
+{
+    "compilerOptions": {
+        "rootDir": "front",
+        "outFile": "build/bundle.js"
+    }
+}

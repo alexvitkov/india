@@ -1,6 +1,6 @@
 <div id="hero" class="overlay">
     <div id="arrows">
-        <img src="svg/arrow.svg" id="protoarrow" style="display: none">
+        <img src="img/arrow.svg" id="protoarrow" style="display: none">
     </div>
 
     <div class="vcenter">
