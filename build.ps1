@@ -1,5 +1,6 @@
-if (-Not Test-Path node_modules)
+if (-Not (Test-Path node_modules)) {
     npm install
+}
 
 # Clear the old build
 Remove-Item -LiteralPath "temp"  -Force -Recurse | out-null

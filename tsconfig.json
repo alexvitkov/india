@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "rootDir": "front",
-        "outDir": "temp"
+        "outDir": "temp",
+        "target": "ES6"
     }
 }

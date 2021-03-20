@@ -13,9 +13,10 @@ if (!isset($_POST['old_folder']) || !isset($_POST['new_folder']) || !isset($_POS
 	exit(1);
 }
 
-/*filename as we want it to be in the directory*/
+// what the name will be in the new directory
 $new_filename = $_POST["filename"];
-/*filename as it is in the directory*/
+
+// what the name WAS in the old directory
 $old_filename = $_POST["filename"];
 
 if (isset($_POST['new_filename']))
@@ -30,6 +31,26 @@ $old_dir = get_directory($old_folder, $user);
 $new_dir = get_directory($new_folder, $user);
 $trash_dir = get_directory("/trash",$user);
 $share_dir = get_directory("/share",$user);
+
+function path_combine($a, $b) {
+    $last_char = substr($a, -1);
+    if ($last_char == "/")
+        return $a . $b;
+    else
+        return $a . "/" . $b;
+}
+
+// We cannot move the folder '/foo' inside '/foo/bar'
+{
+    $old_path = path_combine($old_folder, $old_filename);
+
+    if (substr($new_folder, 0, strlen($old_path)) == $old_path) {
+        error_log("trying to move a parent directory into a subdirectory");
+	    http_response_code(409);
+        exit(0);
+    }
+}
+
 
 if (!$old_dir || !$new_dir || ($old_dir==$user->home_directory && ($old_filename=="share" || $old_filename=="trash"))) {
     error_log("invalid src/dst dir");
