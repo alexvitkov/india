@@ -1,7 +1,7 @@
 import { BaseWindow } from './window'
 import { mk, path_combine, base64ArrayBuffer  } from './util';
 import { show_upload_dialog, show_upload_dialog_replace_file } from './upload_form';
-import { dragging, dragging_fileview, begin_drag_fileview, end_drag } from './dragging'
+import { dragging, Draggable, end_drag } from './dragging'
 import { ShareWindow } from './share_window';
 import { context } from './contextmenu';
 
@@ -53,6 +53,36 @@ export class FileView {
     }
 }
 
+class FileViewDraggable extends Draggable {
+
+    fileview: FileView;
+    placeholder: HTMLDivElement;
+
+    FileViewDraggable(fileview: FileView) {
+        this.fileview = fileview;
+
+        this.onBeforeDragStart = () => {
+            this.placeholder = document.createElement('div');
+            fileview.visuals.parentNode.insertBefore(this.placeholder, fileview.visuals);
+            // fileview.style.zIndex = 50000;
+        };
+
+        this.onAfterDragEnd = () => {
+            // If there's a dragging placeholder remove it and put the dragged node back into its place
+            this.placeholder.parentNode.insertBefore(dragging, dragging_placeholder);
+            this.placeholder.remove();
+        
+            fileview.visuals.style.removeProperty("position");
+            fileview.visuals.style.removeProperty("width");
+            fileview.visuals.style.removeProperty("height");
+            fileview.visuals.style.removeProperty("left");
+            fileview.visuals.style.removeProperty("top");
+
+
+        }
+    }
+}
+
 // make_window creates an explorer window - the kind that can list directories/open files
 function make_window(wnd, has_close: boolean): BaseWindow {
     mk(wnd.h2, 'div', 'path');
@@ -66,7 +96,7 @@ function make_window(wnd, has_close: boolean): BaseWindow {
     // wnd.foldercontents is where the FileViews will be stored
     // it also has a subheader (h3) with 'Upload' and 'New FOlder' buttons
     {
-        wnd.foldercontents = mk(wnd.visuals, 'div', 'foldercontents');
+        wnd.foldercontents = mk(wnd.wc, 'div', 'foldercontents');
         var h3 = mk(wnd.foldercontents, 'h3');
 
         var upload_btn = mk(h3, 'button');
@@ -90,7 +120,7 @@ function make_window(wnd, has_close: boolean): BaseWindow {
     // wnd.filecontentsroot is where the filedata will be stored for open files
     // it also has a subheader (h3) with Share and Download buttons
     {
-        wnd.filecontentsroot = mk(wnd.visuals, 'div', 'filecontentsroot');
+        wnd.filecontentsroot = mk(wnd.wc, 'div', 'filecontentsroot');
         var h3 = mk(wnd.filecontentsroot, 'h3');
 
         let download_btn = mk(h3, 'button');
@@ -200,7 +230,7 @@ function add_file_visuals(fileview: FileView, wnd: ExplorerWindow) {
                                             x_button.innerText = "X";
                                             x_button.onclick = () => { wnd.destroy(); };
 
-                                            const contents = mk(wnd.visuals, 'div', 'filecontentsroot');
+                                            const contents = mk(wnd.wc, 'div', 'filecontentsroot');
                                             const iframe = mk(contents, 'iframe') as HTMLIFrameElement;
                                             iframe.style.flex = '1 0 0';
                                             iframe.src = url;

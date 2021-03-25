@@ -23,6 +23,9 @@ export class BaseWindow {
     files: any[];
     txt_editor: HTMLElement; // For editable text files, this is the DOM element the user can edit
 
+    grid: HTMLElement;
+    wc: HTMLElement;
+
 
     constructor(pwd, x, y, w, h) {
         this.pwd = pwd;      // pwd = [ "Folder1", "Folder2" ] means the current directory of that window is /Folder1/Folder2
@@ -91,6 +94,8 @@ function make_window_base(wnd, pwd, x, y, w, h) {
     windows.push(wnd);
 
     wnd.visuals = mk(document.body, 'div', 'window');
+    wnd.grid = mk(wnd.visuals, 'div', 'windowgrid');
+    wnd.wc = mk(wnd.grid, 'div', 'wc');
 
     wnd.visuals.style.width    = w + "px";
     wnd.visuals.style.height   = h ? (h + "px") : "unset";
@@ -98,7 +103,9 @@ function make_window_base(wnd, pwd, x, y, w, h) {
     wnd.visuals.style.left     = x + "px";
     wnd.visuals.style.top      = y + "px";
 
-    wnd.h2 = mk(wnd.visuals, 'h2');
+    wnd.h2 = mk(wnd.wc, 'h2');
+
+    mk(wnd.grid, 'div', 'nw-resize');
 
     wnd.visuals.onmousedown = (_e) => { 
         wnd.focus();
