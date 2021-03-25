@@ -14,6 +14,43 @@ import * as drag from './dragging'
 // We then increment the depth, and the next window we click will go on top of the current one
 var depth = 20;
 
+export class WindowResizeHandleDraggable extends drag.Draggable {
+    window: HTMLDivElement;
+    xDir: number;
+    yDir: number;
+
+    constructor(window: HTMLDivElement, el: HTMLElement, xDir: number, yDir: number) {
+        super(el);
+        this.window   = window;
+        this.reparent = false;
+        this.lockSize = false;
+        this.xDir = xDir;
+        this.yDir = yDir;
+
+        this.customMoveHandler = (x, y) => {
+            if (this.xDir == -1) {
+                const oldX = parseInt(this.window.style.left.slice(0, -2));
+                const oldWidth = parseInt(this.window.style.width.slice(0, -2));
+                this.window.style.left = x + "px";
+                this.window.style.width = (oldWidth + (oldX - x)).toString() + "px";
+            }
+            if (this.yDir == -1) {
+                const oldY = parseInt(this.window.style.top.slice(0, -2));
+                const oldHeight = parseInt(this.window.style.height.slice(0, -2));
+                this.window.style.top = y + "px";
+                this.window.style.height = (oldHeight + (oldY - y)).toString() + "px";
+            }
+            if (this.xDir == 1) {
+                const oldX = parseInt(this.window.style.left.slice(0, -2));
+                this.window.style.width = (x - oldX).toString() + "px";
+            }
+            if (this.yDir == 1) {
+                const oldY = parseInt(this.window.style.top.slice(0, -2));
+                this.window.style.height = (y - oldY).toString() + "px";
+            }
+        }
+    }
+}
 
 export class BaseWindow {
     pwd: string[];
@@ -87,10 +124,16 @@ export function unfocus_window() {
     }
 }
 
+function mkdraghandle(wnd, _class, x, y) {
+    const d = mk(wnd.grid, 'div', _class);
+    const dd = new WindowResizeHandleDraggable(wnd.visuals as HTMLDivElement, d, x, y);
+    d.onmousedown = (e) => drag.begin_drag(e, dd);
+}
+
 
 // This creates the parts of a window that are common between all window types
 // This should only really be called by another function that will then fill up the window
-function make_window_base(wnd, pwd, x, y, w, h) {
+function make_window_base(wnd: BaseWindow, pwd, x, y, w, h) {
     windows.push(wnd);
 
     wnd.visuals = mk(document.body, 'div', 'window');
@@ -105,7 +148,15 @@ function make_window_base(wnd, pwd, x, y, w, h) {
 
     wnd.h2 = mk(wnd.wc, 'h2');
 
-    mk(wnd.grid, 'div', 'nw-resize');
+
+    mkdraghandle(wnd, 'nw-resize', -1, -1)
+    mkdraghandle(wnd, 'w-resize', -1, 0);
+    mkdraghandle(wnd, 'sw-resize', -1, 1);
+    mkdraghandle(wnd, 's-resize', 0, 1);
+    mkdraghandle(wnd, 'se-resize', 1, 1);
+    mkdraghandle(wnd, 'e-resize', 1, 0);
+    mkdraghandle(wnd, 'ne-resize', 1, -1);
+    mkdraghandle(wnd, 'n-resize', 0, -1);
 
     wnd.visuals.onmousedown = (_e) => { 
         wnd.focus();
@@ -113,7 +164,7 @@ function make_window_base(wnd, pwd, x, y, w, h) {
 
     wnd.h2.onmousedown = (e) => {
         if (!drag.dragging)
-            drag.set_dragging_candidate(e, wnd.visuals);
+            drag.set_dragging_candidate(e, new drag.Draggable(wnd.visuals));
     };
 
     return wnd;

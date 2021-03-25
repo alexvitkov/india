@@ -1,7 +1,7 @@
 import { BaseWindow } from './window'
 import { mk, path_combine, base64ArrayBuffer  } from './util';
 import { show_upload_dialog, show_upload_dialog_replace_file } from './upload_form';
-import { dragging, Draggable, end_drag } from './dragging'
+import { dragging, Draggable, end_drag, begin_drag } from './dragging'
 import { ShareWindow } from './share_window';
 import { context } from './contextmenu';
 
@@ -58,7 +58,8 @@ class FileViewDraggable extends Draggable {
     fileview: FileView;
     placeholder: HTMLDivElement;
 
-    FileViewDraggable(fileview: FileView) {
+    constructor(fileview: FileView) {
+        super(fileview.visuals);
         this.fileview = fileview;
 
         this.onBeforeDragStart = () => {
@@ -69,7 +70,7 @@ class FileViewDraggable extends Draggable {
 
         this.onAfterDragEnd = () => {
             // If there's a dragging placeholder remove it and put the dragged node back into its place
-            this.placeholder.parentNode.insertBefore(dragging, dragging_placeholder);
+            this.placeholder.parentNode.insertBefore(this.el, this.placeholder);
             this.placeholder.remove();
         
             fileview.visuals.style.removeProperty("position");
@@ -77,8 +78,6 @@ class FileViewDraggable extends Draggable {
             fileview.visuals.style.removeProperty("height");
             fileview.visuals.style.removeProperty("left");
             fileview.visuals.style.removeProperty("top");
-
-
         }
     }
 }
@@ -271,7 +270,7 @@ function add_file_visuals(fileview: FileView, wnd: ExplorerWindow) {
             e.preventDefault();
             return;
         }
-        begin_drag_fileview(e, fileview);
+        begin_drag(e, new FileViewDraggable(fileview));
         e.preventDefault();
     };
 
@@ -280,13 +279,13 @@ function add_file_visuals(fileview: FileView, wnd: ExplorerWindow) {
             if (fileview.is_directory) {
                 if (wnd.get_path() == "/" && fileview.filename == "trash") {
                     // If we've dragged something onto the trashcan, it's trash
-                    move_to_trash(wnd, dragging_fileview.filename);
+                    move_to_trash(wnd, (dragging as FileViewDraggable).fileview.filename);
                 }
                 else if (wnd.get_path() == "/" && fileview.filename == "share") {
                     // move to 'share' is invalid
                 } else {
                     // If we've dragged something onto a directory, move it into that directory
-                    move_file(dragging_fileview.wnd, wnd, path_combine(wnd.get_path(), fileview.filename), dragging_fileview.filename);
+                    move_file((dragging as FileViewDraggable).fileview.wnd, wnd, path_combine(wnd.get_path(), fileview.filename), (dragging as FileViewDraggable).fileview.filename);
                 }
             } else {
                 // alert(`Dropped ${dst.filename} on ${src.filename}`);
@@ -422,8 +421,8 @@ function openfile_dir(wnd) {
     wnd.foldercontents.style.display   = 'flex';
 
     wnd.foldercontents.onmouseup = () => {
-        if (dragging && dragging_fileview) {
-            move_file(dragging_fileview.wnd, wnd, wnd.get_path(), dragging_fileview.filename);
+        if (dragging && dragging instanceof FileViewDraggable) {
+            move_file((dragging as FileViewDraggable).fileview.wnd, wnd, wnd.get_path(), (dragging as FileViewDraggable).fileview.filename);
         }
     }
 }
@@ -557,9 +556,9 @@ function update_path_visuals(wnd) {
     
         // We can drop files onto the path, which will omve them to teh folder
         entry.onmouseup = (e) => {
-            if (dragging && dragging_fileview) {
+            if (dragging && dragging instanceof FileViewDraggable) {
                 var new_folder = wnd.get_path(i + 1);
-                move_file(dragging_fileview.wnd, wnd, new_folder, dragging_fileview.filename);
+                move_file((dragging as FileViewDraggable).fileview.wnd, wnd, new_folder, (dragging as FileViewDraggable).fileview.filename);
                 end_drag(e);
     
                 e.preventDefault();
